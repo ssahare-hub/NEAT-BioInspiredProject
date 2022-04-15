@@ -1,6 +1,6 @@
 import random
 import copy
-from functools import itertools
+import itertools
 from node import Node
 from edge import Edge
 

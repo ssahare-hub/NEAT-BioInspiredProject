@@ -58,6 +58,8 @@ class genome(object):
 
         # n1 = self.nodes[np.random.randint(0, len(self.nodes))]
         # n2 = self.nodes[np.random.randint(0, len(self.nodes))]
+        
+        # NOTE: Random connection creation is unreliable
         if i == -1 & j ==-1:
             n1 = self._nodes[np.random.randint(0, len(self._nodes))]
             n2 = self._nodes[np.random.randint(0, len(self._nodes))]
@@ -73,7 +75,6 @@ class genome(object):
             n1 = self._nodes[i]
             n2 = self._nodes[j]
 
-        
 
         c = self.ch.exists(n1, n2)
         x = Connection(n1, n2, weight)
@@ -82,6 +83,8 @@ class genome(object):
         if c != None:
             print("c is not empty",c.innov)
             x.innov = c.innov
+            # NOTE: Checks if this connection exists in the connection history
+            # if it does, assigns the same innovation number
             if not self.exists(x.innov):
                 # self._connections.append(x)
                 self._connections[(n1.number,n2.number)] = x

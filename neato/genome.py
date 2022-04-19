@@ -2,7 +2,7 @@ import numpy as np
 import random
 import copy
 import itertools
-from node1 import node
+from node import Node
 from connection import Connection
 
 
@@ -35,13 +35,13 @@ class Genome(object):
     def createNetwork(self):
         # Create Input nodes
         for i in range(self._inputs):
-            self._nodes[i] = node(
+            self._nodes[i] = Node(
                 self.total_nodes, self.input_layer, self.default_activation)
             self.total_nodes += 1
         
         # Create Output nodes
         for i in range(self._inputs, self._inputs+self._outputs):
-            self._nodes[i] = node(
+            self._nodes[i] = Node(
                 self.total_nodes, self.output_layer, self.default_activation)
             self.total_nodes += 1
 
@@ -175,18 +175,18 @@ class Genome(object):
         disabling the parent connection.
         """
         enabled = [k for k in self._connections if self._connections[k]
-                   .enabled and self._connections[k].in_node.layer+1 < self._connections[k].out_node.layer]
+                   .enabled and self._connections[k].input_node.layer+1 < self._connections[k].output_node.layer]
         (i, j) = random.choice(enabled)
         connection = self._connections[(i, j)]
         connection.enabled = False
 
-        print(connection.in_node.layer + 1, connection.out_node.layer)
+        print(connection.input_node.layer + 1, connection.output_node.layer)
         new_node_layer = np.random.randint(
-            connection.in_node.layer + 1, connection.out_node.layer)
+            connection.input_node.layer + 1, connection.output_node.layer)
         new_node = self.total_nodes
         self.total_nodes += 1
         # print(new_node,self.total_nodes)
-        self._nodes[new_node] = node(
+        self._nodes[new_node] = Node(
             new_node, new_node_layer, self.default_activation)
 
         self.add_connection(i, new_node, 1.0)
@@ -297,8 +297,8 @@ class Genome(object):
         """
         return copy.deepcopy(self)
     # def add_node(self):
-    #     # self.nodes.append(node(self.total_nodes, np.random.randint(self.input_layer+1, self.output_layer),self.default_activation))
-    #     self.nodes.append(node(self.total_nodes, np.random.randint(self.input_layer+1, self.output_layer),self.default_activation))
+    #     # self.nodes.append(Node(self.total_nodes, np.random.randint(self.input_layer+1, self.output_layer),self.default_activation))
+    #     self.nodes.append(Node(self.total_nodes, np.random.randint(self.input_layer+1, self.output_layer),self.default_activation))
     #     self.total_nodes += 1
 
     # def randomize(self):

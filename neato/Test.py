@@ -1,7 +1,7 @@
 from connection import Connection
 from connection_history import ConnectionHistory
 # from node import Node
-from node1 import node
+from node import Node
 from genome import Genome
 from hyperparameters import *
 

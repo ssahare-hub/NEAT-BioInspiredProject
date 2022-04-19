@@ -1,7 +1,7 @@
 import random
 import copy
 import itertools
-from node import Node
+from old_node import Node
 from edge import Edge
 
 class OldGenome(object):

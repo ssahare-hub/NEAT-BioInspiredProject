@@ -1,6 +1,10 @@
+import numpy as np
+
 class Node(object):
-    """A gene object representing a node in the neural network."""
-    def __init__(self, activation):
-        self.output = 0
+    def __init__(self, n, l,activation):
+        self.output = 0 # used for forward propagation
         self.bias = 0
         self.activation = activation
+        self.number = n
+        self.layer = l
+        self.inConnections = []

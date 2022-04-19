@@ -1,4 +1,4 @@
-from genome import *
+from old_genome import *
 from hyperparameters import *
 from species import *
 import pickle
@@ -53,7 +53,7 @@ class Brain(object):
     def generate(self):
         """Generate the initial population of genomes."""
         for i in range(self._population):
-            g = Genome(self._inputs, self._outputs, 
+            g = OldGenome(self._inputs, self._outputs, 
                        self._hyperparams.default_activation)
             g.generate()
             self.classify_genome(g)
@@ -143,7 +143,7 @@ class Brain(object):
                     if i%3 == 0:
                         g = self._global_best.clone()
                     else:
-                        g = Genome(self._inputs, self._outputs, 
+                        g = OldGenome(self._inputs, self._outputs, 
                                    self._hyperparams.default_activation)
                         g.generate()
                     g.mutate(self._hyperparams.mutation_probabilities)

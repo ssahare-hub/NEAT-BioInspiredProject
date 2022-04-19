@@ -1,8 +1,8 @@
 from connection import Connection
-from connectionh import ConnectionH
+from connection_history import ConnectionHistory
 # from node import Node
 from node1 import node
-from genome1 import genome
+from genome import Genome
 from hyperparameters import *
 
 import random
@@ -62,8 +62,8 @@ def main():
     
     hyperparameters = Hyperparameters()
     default_activation = hyperparameters.default_activation
-    ch = ConnectionH(4,1)
-    g = genome(ch,9,default_activation,True)
+    ch = ConnectionHistory(4,1)
+    g = Genome(ch,9,default_activation,True)
     g.forward([10,1,2,3])
 
     # for n in range(g.total_nodes):

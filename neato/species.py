@@ -1,7 +1,7 @@
 import random
 import math
 import copy
-from genome import *
+from old_genome import *
 
 def genomic_crossover(a, b):
     """Breed two genomes and return the child. Matching genes
@@ -9,7 +9,7 @@ def genomic_crossover(a, b):
     from the fitter parent.
     """
     # Template genome for child
-    child = Genome(a._inputs, a._outputs, a._default_activation)
+    child = OldGenome(a._inputs, a._outputs, a._default_activation)
     a_in = set(a._edges)
     b_in = set(b._edges)
 

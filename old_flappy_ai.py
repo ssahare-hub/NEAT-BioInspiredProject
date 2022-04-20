@@ -8,8 +8,8 @@ import pygame
 from pygame.locals import *
 
 sys.path.append('./neato')
-from neato.brain import Brain
-from neato.hyperparameters import Hyperparameters
+from neato.old_brain import OldBrain
+from neato.old_hyperparameters import OldHyperparameters
 
  
 # Constants
@@ -100,34 +100,31 @@ def generate_visualized_network(genome, nodes):
     for i in genome.get_nodes():
         if genome.is_input(i):
             color = (0, 0, 255)
-            x = 0.05*NETWORK_WIDTH
-            y = HEIGHT/4 + HEIGHT/5 * i
+            x = 50
+            y = 140 + i*60
         elif genome.is_output(i):
             color = (255, 0, 0)
-            x = NETWORK_WIDTH-0.05*NETWORK_WIDTH
+            x = NETWORK_WIDTH-50
             y = HEIGHT/2
         else:
             color = (0, 0, 0)
-            # x = random.randint(NETWORK_WIDTH/3, int(NETWORK_WIDTH * (4.0/5)))
-            x = NETWORK_WIDTH/10 + NETWORK_WIDTH/(genome._hidden_layers+3) * genome._nodes[i].layer
+            x = random.randint(NETWORK_WIDTH/3, int(NETWORK_WIDTH * (2.0/3)))
             y = random.randint(20, HEIGHT-20)
         nodes[i] = [(int(x), int(y)), color]
 
 def render_visualized_network(genome, nodes, display):
     """Render the visualized neural network"""
-    genes = genome.get_connections()
-    for innovation in genes:
-        connection = genes[innovation]
-        if connection.enabled: # Enabled or disabled connection
+    genes = genome.get_edges()
+    for edge in genes:
+        if genes[edge].enabled: # Enabled or disabled edge
             color = (0, 255, 0)
         else:
             color = (255, 0, 0)
-        i, j = connection.in_node.number, connection.out_node.number
-        pygame.draw.line(display, color, nodes[i][0], nodes[j][0], 3)
+            
+        pygame.draw.line(display, color, nodes[edge[0]][0], nodes[edge[1]][0], 3)
 
     for n in nodes:
         pygame.draw.circle(display, nodes[n][1], nodes[n][0], 7)
-
 
 def main():
     pygame.init()
@@ -138,26 +135,21 @@ def main():
     clock = pygame.time.Clock()
     timer = 0
 
-    inputs = 4
-    outputs = 1
-    hidden_layers = 6
-    population = 100
-
     player = Bird(WIDTH/4, HEIGHT/2)
     pipes = []
     ahead = []
 
     # Load the bird's brain
-    if os.path.isfile('flappy_bird.neat'):
-        brain = Brain.load('flappy_bird')
+    if os.path.isfile('old_flappy_bird.neat'):
+        brain = OldBrain.load('old_flappy_bird')
     else:
-        hyperparams = Hyperparameters()
+        hyperparams = OldHyperparameters()
         hyperparams.delta_threshold = 0.75
 
         hyperparams.mutation_probabilities['node'] = 0.05
         hyperparams.mutation_probabilities['edge'] = 0.05
 
-        brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
+        brain = OldBrain(4, 1, 100, hyperparams)
         brain.generate()
 
     inputs = [0, 0, 0, 0]
@@ -197,7 +189,7 @@ def main():
 
             if AI:
                 # Save the bird's brain
-                brain.save('flappy_bird')
+                brain.save('old_flappy_bird')
                 brain.next_iteration()
                 nodes = {}
                 generate_visualized_network(brain.get_current(), nodes)

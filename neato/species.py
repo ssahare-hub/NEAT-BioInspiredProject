@@ -1,7 +1,7 @@
 import random
 import math
 import copy
-from old_genome import *
+from genome import *
 
 def genomic_crossover(a, b):
     """Breed two genomes and return the child. Matching genes
@@ -9,32 +9,34 @@ def genomic_crossover(a, b):
     from the fitter parent.
     """
     # Template genome for child
-    child = OldGenome(a._inputs, a._outputs, a._default_activation)
-    a_in = set(a._edges)
-    b_in = set(b._edges)
+    child = Genome(a.connection_history, a._default_activation)
+    a_in = set(a._connections)
+    b_in = set(b._connections)
 
     # Inherit homologous gene from a random parent
     for i in a_in & b_in:
         parent = random.choice([a, b])
-        child._edges[i] = copy.deepcopy(parent._edges[i])
+        child._connections[i] = copy.deepcopy(parent._connections[i])
 
     # Inherit disjoint/excess genes from fitter parent
     if a._fitness > b._fitness:
         for i in a_in - b_in:
-            child._edges[i] = copy.deepcopy(a._edges[i])
+            child._connections[i] = copy.deepcopy(a._connections[i])
     else:
         for i in b_in - a_in:
-            child._edges[i] = copy.deepcopy(b._edges[i])
+            child._connections[i] = copy.deepcopy(b._connections[i])
     
     # Calculate max node
-    child._max_node = 0
-    for (i, j) in child._edges:
-        current_max = max(i, j)
-        child._max_node = max(child._max_node, current_max)
-    child._max_node += 1
+    child._total_nodes = 0
+    for innovation in child._connections:
+        in_node = child._connections[innovation].in_node.number
+        out_node = child._connections[innovation].out_node.number
+        current_max = max(in_node, out_node)
+        child._total_nodes = max(child._total_nodes, current_max)
+    child._total_nodes += 1
 
     # Inherit nodes
-    for n in range(child._max_node):
+    for n in range(child._total_nodes):
         inherit_from = []
         if n in a._nodes:
             inherit_from.append(a)
@@ -74,7 +76,8 @@ class Specie(object):
         elif choice == "sexual":
             (mom, dad) = random.sample(self._members, 2)
             child = genomic_crossover(mom, dad)
-
+        
+        # child.mutate(mutation_probabilities)
         return child
 
     def update_fitness(self):

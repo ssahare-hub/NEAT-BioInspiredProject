@@ -20,7 +20,8 @@ class Hyperparameters(object):
     def __init__(self):
         self.delta_threshold = 1.5
         self.distance_weights = {
-            'edge' : 1.0,
+            'disjoint_connections' : 1.0,
+            'matching_connections' : 1,
             'weight' : 1.0,
             'bias' : 1.0
         }
@@ -35,12 +36,12 @@ class Hyperparameters(object):
             'sexual' : 0.5
         }
         self.mutation_probabilities = {
-            'node' : 0.5,
-            'edge' : 0.25,
-            'weight_perturb' : 0.4,
-            'weight_set' : 0.1,
-            'bias_perturb' : 0.3,
-            'bias_set' : 0.1,
-            're-enable': 0.2
+            'node' : 0.05,
+            'edge' : 0.05,
+            'weight_perturb' : 0.04,
+            'weight_set' : 0.01,
+            'bias_perturb' : 0.03,
+            'bias_set' : 0.01,
+            're-enable': 0.0005
         }
 

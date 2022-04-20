@@ -1,3 +1,4 @@
+from collections import defaultdict
 import numpy as np
 import random
 import copy
@@ -120,9 +121,7 @@ class Genome(object):
             self._nodes[i].output = inputs[i]
 
         # Generate backward-adjacency list
-        _from = {}
-        for n in range(self.total_nodes):
-            _from[n] = []
+        _from = defaultdict(list)
 
         for (i, j) in self._connections:
             if not self._connections[(i, j)].enabled:
@@ -130,10 +129,15 @@ class Genome(object):
             _from[j].append(i)
 
         # Calculate output values for each node
+        # 4 ips 1  op
+        # ips = 4, ops = 1, unhiddn = 5, total = 5
         ordered_nodes = itertools.chain(
+            # 5, 10
             range(self._unhidden, self.total_nodes),
+            # 4, 5
             range(self._inputs, self._unhidden)
         )
+        # 5,6,7,8,9 4
         for j in ordered_nodes:
             ax = 0
             for i in _from[j]:
@@ -175,14 +179,14 @@ class Genome(object):
         disabling the parent connection.
         """
         enabled = [k for k in self._connections if self._connections[k]
-                   .enabled and self._connections[k].input_node.layer+1 < self._connections[k].output_node.layer]
+                   .enabled and self._connections[k].in_node.layer+1 < self._connections[k].out_node.layer]
         (i, j) = random.choice(enabled)
         connection = self._connections[(i, j)]
         connection.enabled = False
 
-        print(connection.input_node.layer + 1, connection.output_node.layer)
+        print(connection.in_node.layer + 1, connection.out_node.layer)
         new_node_layer = np.random.randint(
-            connection.input_node.layer + 1, connection.output_node.layer)
+            connection.in_node.layer + 1, connection.out_node.layer)
         new_node = self.total_nodes
         self.total_nodes += 1
         # print(new_node,self.total_nodes)

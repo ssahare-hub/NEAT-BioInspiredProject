@@ -85,7 +85,7 @@ class Genome(object):
             # if it does, assigns the same innovation number
             new_connection.innovation = old_connection.innovation
             if not self.exists(new_connection.innovation):
-                self._connections[(n1.number, n2.number)] = new_connection
+                self._connections[new_connection.innovation] = new_connection
                 n2.inConnections.append(new_connection)
         else:
             # the new connection is not in the connection history
@@ -94,7 +94,7 @@ class Genome(object):
             self.connection_history.global_innovation_count += 1
             
             # Add it to dict of all connection 
-            self._connections[(n1.number, n2.number)] = new_connection
+            self._connections[new_connection.innovation] = new_connection
             
             # Add it to the connection history
             self.connection_history.allConnections.append(new_connection)  
@@ -104,8 +104,8 @@ class Genome(object):
 
     # check if a connection with same innovation number exists in the genome
     def exists(self, innovation_number):
-        for (i, j) in self._connections:
-            if self._connections[(i, j)].innovation == innovation_number:
+        for n in self._connections:
+            if self._connections[n].innovation == innovation_number:
                 return True
         return False
 
@@ -122,26 +122,26 @@ class Genome(object):
 
         # Generate backward-adjacency list
         _from = defaultdict(list)
+        _innov_to_connections = defaultdict(int)
 
-        for (i, j) in self._connections:
-            if not self._connections[(i, j)].enabled:
+        for n in self._connections:
+            connection = self._connections[n]
+            if not connection.enabled:
                 continue
-            _from[j].append(i)
+            _from[connection.out_node].append(connection.in_node)
+            _innov_to_connections[(connection.in_node, connection.out_node)] = connection.innovation
+        
 
-        # Calculate output values for each node
-        # 4 ips 1  op
-        # ips = 4, ops = 1, unhiddn = 5, total = 5
+        # Calculate output values for each node\
         ordered_nodes = itertools.chain(
-            # 5, 10
             range(self._unhidden, self.total_nodes),
-            # 4, 5
             range(self._inputs, self._unhidden)
         )
-        # 5,6,7,8,9 4
         for j in ordered_nodes:
             ax = 0
             for i in _from[j]:
-                ax += self._connections[(i, j)].weight * self._nodes[i].output
+                innovation = _innov_to_connections[(i,j)]
+                ax += self._connections[innovation].weight * self._nodes[i].output
 
             node = self._nodes[j]
             node.output = node.activation(ax + node.bias)
@@ -153,35 +153,41 @@ class Genome(object):
         if self.is_disabled():
             self.add_enabled()
 
-        population = list(probabilities.keys())
-        weights = [probabilities[k] for k in population]
-        choice = random.choices(population, weights=weights)[0]
+        potential_connections = [n for n in self._connections if self._connections[n].enabled and self._connections[n].in_node.layer+1 < self._connections[n].out_node.layer]
+        choices = list(probabilities.keys())
+
+        if not potential_connections:
+            choices.remove("node")
+            print("No node can be added!")
+
+        weights = [probabilities[k] for k in choices]
+        choice = random.choices(choices, weights=weights)[0]
 
         if choice == "node":
             print("add node")
-            self.add_node()
+            self.add_node(potential_connections)
         elif choice == "connection":
             (i, j) = self.random_pair()
             self.add_connection(i, j, random.uniform(-1, 1))
             print("add connection between:")
-            self._connections[(i, j)].showConn()
+            # self._connections[(i, j)].showConn()
         elif choice == "weight_perturb" or choice == "weight_set":
             print(choice)
             self.shift_weight(choice)
         elif choice == "bias_perturb" or choice == "bias_set":
             print(choice)
             self.shift_bias(choice)
-
+        elif choice == "re-enable":
+            print('re enabling a random connection')
+            self.add_enabled()
         self.reset()
 
-    def add_node(self):
+    def add_node(self, potential_connections):
         """Add a new node between a randomly selected connection,
         disabling the parent connection.
         """
-        enabled = [k for k in self._connections if self._connections[k]
-                   .enabled and self._connections[k].in_node.layer+1 < self._connections[k].out_node.layer]
-        (i, j) = random.choice(enabled)
-        connection = self._connections[(i, j)]
+        n = random.choice(potential_connections)
+        connection = self._connections[n]
         connection.enabled = False
 
         print(connection.in_node.layer + 1, connection.out_node.layer)
@@ -193,8 +199,8 @@ class Genome(object):
         self._nodes[new_node] = Node(
             new_node, new_node_layer, self.default_activation)
 
-        self.add_connection(i, new_node, 1.0)
-        self.add_connection(new_node, j, connection.weight)
+        self.add_connection(connection.in_node.number, new_node, 1.0)
+        self.add_connection(new_node, connection.out_node.number, connection.weight)
 
     def add_enabled(self):
         """Re-enable a random disabled connection."""
@@ -239,8 +245,8 @@ class Genome(object):
             else:
                 j = random.choice(j_list)
         else:
-            (i, j) = random.choice([(i, j) for (i, j) in self._connections])
-            while (i, j) in self._connections:
+            innovation = random.choice([n for n in self._connections])
+            while innovation in self._connections:
                 i = random.choice(
                     [n for n in range(self.total_nodes) if not self.is_output(n)])
                 j_list = [n for n in range(self.total_nodes) if not self.is_input(

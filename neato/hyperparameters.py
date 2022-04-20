@@ -35,11 +35,12 @@ class Hyperparameters(object):
             'sexual' : 0.5
         }
         self.mutation_probabilities = {
-            'node' : 0.01,
-            'edge' : 0.09,
+            'node' : 0.5,
+            'edge' : 0.25,
             'weight_perturb' : 0.4,
             'weight_set' : 0.1,
             'bias_perturb' : 0.3,
-            'bias_set' : 0.1
+            'bias_set' : 0.1,
+            're-enable': 0.2
         }
 

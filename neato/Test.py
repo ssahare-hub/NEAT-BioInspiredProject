@@ -1,12 +1,13 @@
 from connection import Connection
 from connection_history import ConnectionHistory
-# from node import Node
+
 from node import Node
 from genome import Genome
 from hyperparameters import *
 
 import random
 import time
+
 import pygame
 from pygame.locals import *
 
@@ -43,13 +44,14 @@ def generate_visualized_network(genome, nodes):
 def render_visualized_network(genome, nodes, display):
     """Render the visualized neural network"""
     genes = genome.get_connections()
-    for connection in genes:
-        if genes[connection].enabled: # Enabled or disabled connection
+    for innovation in genes:
+        connection = genes[innovation]
+        if connection.enabled: # Enabled or disabled connection
             color = (0, 255, 0)
         else:
             color = (255, 0, 0)
-            
-        pygame.draw.line(display, color, nodes[connection[0]][0], nodes[connection[1]][0], 3)
+        i, j = connection.in_node.number, connection.out_node.number
+        pygame.draw.line(display, color, nodes[i][0], nodes[j][0], 3)
 
     for n in nodes:
         pygame.draw.circle(display, nodes[n][1], nodes[n][0], 7)
@@ -81,8 +83,13 @@ def main():
             render_visualized_network(g, nodes, network_display)
         display.blit(network_display, (0, 0))
         pygame.display.update()
-        g.mutate(hyperparameters.mutation_probabilities)
-        time.sleep(2)
+        try:
+            g.mutate(hyperparameters.mutation_probabilities)
+        except Exception as e:
+            print(e)
+            pygame.image.save(display,'graph.jpg')
+            break
+        time.sleep(0.5)
         print(">==============================================================================================<")
         for n in (g._connections):
             g._connections[n].showConn()

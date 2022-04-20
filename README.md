@@ -13,3 +13,7 @@ Notes:
 4. Change the way fitness is calculated
 5. Improve on the way speciation factor δ is calculated
 6. Add selection in crossover and/or cloning
+7. Offsprings are produced proportional to the best performing candidates/genomes
+8. Species -> change crossover
+9. Parallel evaluation of genomes - try to parallelize openai gym using the old brain
+10. 

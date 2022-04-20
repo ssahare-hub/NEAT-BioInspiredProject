@@ -8,19 +8,20 @@ from connection import Connection
 
 
 class Genome(object):
-    def __init__(self, connection_history, hidden_layers, default_activation, willCreate):
+    def __init__(self, connection_history, default_activation, willCreate = False):
         self.connection_history = connection_history
         self._inputs = connection_history.inputs
         self._outputs = connection_history.outputs
         self._unhidden = connection_history.inputs + connection_history.outputs
+        self._hidden_layers = connection_history.hidden_layers
 
-        self.default_activation = default_activation
+        self._default_activation = default_activation
 
         # Structure
         self.input_layer = 0
-        self.output_layer = hidden_layers+1
+        self.output_layer = self._hidden_layers+1
 
-        self.total_nodes = 0
+        self._total_nodes = 0
         self.creation_rate = 1
 
         self._nodes = {}
@@ -37,14 +38,14 @@ class Genome(object):
         # Create Input nodes
         for i in range(self._inputs):
             self._nodes[i] = Node(
-                self.total_nodes, self.input_layer, self.default_activation)
-            self.total_nodes += 1
+                self._total_nodes, self.input_layer, self._default_activation)
+            self._total_nodes += 1
         
         # Create Output nodes
         for i in range(self._inputs, self._inputs+self._outputs):
             self._nodes[i] = Node(
-                self.total_nodes, self.output_layer, self.default_activation)
-            self.total_nodes += 1
+                self._total_nodes, self.output_layer, self._default_activation)
+            self._total_nodes += 1
 
         # Add random connections between input and output nodes
         # NOTE: This might be redundant
@@ -128,13 +129,14 @@ class Genome(object):
             connection = self._connections[n]
             if not connection.enabled:
                 continue
-            _from[connection.out_node].append(connection.in_node)
-            _innov_to_connections[(connection.in_node, connection.out_node)] = connection.innovation
+            _from[connection.out_node.number].append(connection.in_node.number)
+            _innov_to_connections[(connection.in_node.number, connection.out_node.number)] = connection.innovation
+            # print(_from)
         
 
         # Calculate output values for each node\
         ordered_nodes = itertools.chain(
-            range(self._unhidden, self.total_nodes),
+            range(self._unhidden, self._total_nodes),
             range(self._inputs, self._unhidden)
         )
         for j in ordered_nodes:
@@ -142,9 +144,11 @@ class Genome(object):
             for i in _from[j]:
                 innovation = _innov_to_connections[(i,j)]
                 ax += self._connections[innovation].weight * self._nodes[i].output
+                # print(i,j)
 
             node = self._nodes[j]
             node.output = node.activation(ax + node.bias)
+            # print(j,node.output)
 
         return [self._nodes[n].output for n in range(self._inputs, self._unhidden)]
 
@@ -193,11 +197,11 @@ class Genome(object):
         print(connection.in_node.layer + 1, connection.out_node.layer)
         new_node_layer = np.random.randint(
             connection.in_node.layer + 1, connection.out_node.layer)
-        new_node = self.total_nodes
-        self.total_nodes += 1
-        # print(new_node,self.total_nodes)
+        new_node = self._total_nodes
+        self._total_nodes += 1
+        # print(new_node,self._total_nodes)
         self._nodes[new_node] = Node(
-            new_node, new_node_layer, self.default_activation)
+            new_node, new_node_layer, self._default_activation)
 
         self.add_connection(connection.in_node.number, new_node, 1.0)
         self.add_connection(new_node, connection.out_node.number, connection.weight)
@@ -221,7 +225,7 @@ class Genome(object):
     def shift_bias(self, type):
         """Randomly shift, perturb, or set the bias of an incoming connection."""
         # Select only nodes in the hidden and output layer
-        n = random.choice(range(self._inputs, self.total_nodes))
+        n = random.choice(range(self._inputs, self._total_nodes))
         if type == "bias_perturb":
             self._nodes[n].bias += random.uniform(-1, 1)
         elif type == "bias_set":
@@ -233,14 +237,14 @@ class Genome(object):
         2. j is not an input
         3. i != j
         """
-        if self.total_nodes == self._inputs+self._outputs:
+        if self._total_nodes == self._inputs+self._outputs:
             i = random.choice(
-                [n for n in range(self.total_nodes) if not self.is_output(n)])
-            j_list = [n for n in range(self.total_nodes) if not self.is_input(
+                [n for n in range(self._total_nodes) if not self.is_output(n)])
+            j_list = [n for n in range(self._total_nodes) if not self.is_input(
                 n) and n != i and self._nodes[n].layer > self._nodes[i].layer]
 
             if not j_list:
-                j = self.total_nodes
+                j = self._total_nodes
                 self.add_node()
             else:
                 j = random.choice(j_list)
@@ -248,12 +252,12 @@ class Genome(object):
             innovation = random.choice([n for n in self._connections])
             while innovation in self._connections:
                 i = random.choice(
-                    [n for n in range(self.total_nodes) if not self.is_output(n)])
-                j_list = [n for n in range(self.total_nodes) if not self.is_input(
+                    [n for n in range(self._total_nodes) if not self.is_output(n)])
+                j_list = [n for n in range(self._total_nodes) if not self.is_input(
                     n) and n != i and self._nodes[n].layer > self._nodes[i].layer]
 
                 if not j_list:
-                    j = self.total_nodes
+                    j = self._total_nodes
                     self.add_node()
                 else:
                     j = random.choice(j_list)
@@ -270,7 +274,7 @@ class Genome(object):
 
     def is_hidden(self, n):
         """Determine if the node id is hidden."""
-        return self._unhidden <= n < self.total_nodes
+        return self._unhidden <= n < self._total_nodes
 
     def is_disabled(self):
         """Determine if all of its genes are disabled."""
@@ -290,7 +294,7 @@ class Genome(object):
 
     def get_num_nodes(self):
         """Get the number of nodes in the network."""
-        return self.total_nodes
+        return self._total_nodes
 
     def set_fitness(self, score):
         """Set the fitness score of this genome."""
@@ -298,7 +302,7 @@ class Genome(object):
 
     def reset(self):
         """Reset the genome's internal state."""
-        for n in range(self.total_nodes):
+        for n in range(self._total_nodes):
             self._nodes[n].output = 0
         self._fitness = 0
 
@@ -307,9 +311,9 @@ class Genome(object):
         """
         return copy.deepcopy(self)
     # def add_node(self):
-    #     # self.nodes.append(Node(self.total_nodes, np.random.randint(self.input_layer+1, self.output_layer),self.default_activation))
-    #     self.nodes.append(Node(self.total_nodes, np.random.randint(self.input_layer+1, self.output_layer),self.default_activation))
-    #     self.total_nodes += 1
+    #     # self.nodes.append(Node(self._total_nodes, np.random.randint(self.input_layer+1, self.output_layer),self.default_activation))
+    #     self.nodes.append(Node(self._total_nodes, np.random.randint(self.input_layer+1, self.output_layer),self.default_activation))
+    #     self._total_nodes += 1
 
     # def randomize(self):
     #     self.weight = np.random.random() * 4 - 2

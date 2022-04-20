@@ -1,5 +1,6 @@
-from old_genome import *
+from genome import *
 from hyperparameters import *
+from neato.connection_history import ConnectionHistory
 from species import *
 import pickle
 import multiprocessing as mp
@@ -7,36 +8,39 @@ import multiprocessing as mp
 
 def genomic_distance(a, b, distance_weights):
     """Calculate the genomic distance between two genomes."""
-    a_edges = set(a._edges)
-    b_edges = set(b._edges)
+    a_connections = set(a._connections)
+    b_connections = set(b._connections)
 
     # Does not distinguish between disjoint and excess
-    matching_edges = a_edges & b_edges
-    disjoint_edges = (a_edges - b_edges) | (b_edges - a_edges)
-    N_edges = len(max(a_edges, b_edges, key=len))
-    N_nodes = min(a._max_node, b._max_node)
+    matching_connections = a_connections & b_connections
+    disjoint_connections = (a_connections - b_connections) | (b_connections - a_connections)
+    N_connections = len(max(a_connections, b_connections, key=len))
+    N_nodes = min(a._total_nodes, b._total_nodes)
 
     weight_diff = 0
-    for i in matching_edges:
-        weight_diff += abs(a._edges[i].weight - b._edges[i].weight)
+    for i in matching_connections:
+        weight_diff += abs(a._connections[i].weight - b._connections[i].weight)
 
     bias_diff = 0
     for i in range(N_nodes):
         bias_diff += abs(a._nodes[i].bias - b._nodes[i].bias)
 
-    t1 = distance_weights['edge'] * len(disjoint_edges)/N_edges
-    t2 = distance_weights['weight'] * weight_diff/len(matching_edges)
-    t3 = distance_weights['bias'] * bias_diff/N_nodes
-    return t1 + t2 + t3
+    t1 = distance_weights['disjoint_connections'] * len(disjoint_connections)/N_connections
+    t2 = distance_weights['matching_connections'] * len(matching_connections)/N_connections
+    t3 = distance_weights['weight'] * weight_diff/len(matching_connections)
+    t4 = distance_weights['bias'] * bias_diff/N_nodes
+    return t1  + t3 + t4 #+ t2
 
 
 class Brain(object):
     """Base class for a 'brain' that learns through the evolution
     of a population of genomes.
     """
-    def __init__(self, inputs, outputs, population=100, hyperparams=Hyperparameters()):
+    def __init__(self, inputs, outputs, hidden_layers, population=100, hyperparams=Hyperparameters()):
         self._inputs = inputs
         self._outputs = outputs
+        self._hidden_layers = hidden_layers
+        self._connection_history = ConnectionHistory(inputs,outputs,hidden_layers)
 
         self._species = []
         self._population = population
@@ -53,10 +57,11 @@ class Brain(object):
     def generate(self):
         """Generate the initial population of genomes."""
         for i in range(self._population):
-            g = OldGenome(self._inputs, self._outputs, 
+            g = Genome(self._connection_history, 
                        self._hyperparams.default_activation)
-            g.generate()
+            g.createNetwork()
             self.classify_genome(g)
+        print("generating genome for population")
         
         # Set the initial best genome
         self._global_best = self._species[0]._members[0]
@@ -143,7 +148,7 @@ class Brain(object):
                     if i%3 == 0:
                         g = self._global_best.clone()
                     else:
-                        g = OldGenome(self._inputs, self._outputs, 
+                        g = Genome(self._inputs, self._outputs, 
                                    self._hyperparams.default_activation)
                         g.generate()
                     g.mutate(self._hyperparams.mutation_probabilities)

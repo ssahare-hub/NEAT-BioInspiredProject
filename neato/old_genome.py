@@ -67,9 +67,11 @@ class OldGenome(object):
             ax = 0
             for i in _from[j]:
                 ax += self._edges[(i, j)].weight * self._nodes[i].output
+                # print(i,j)
 
             node = self._nodes[j]
             node.output = node.activation(ax + node.bias)
+            # print(j,node.output)
         
         return [self._nodes[n].output for n in range(self._inputs, self._unhidden)]
 
@@ -84,13 +86,17 @@ class OldGenome(object):
 
         if choice == "node":
             self.add_node()
+            print("add node")
         elif choice == "edge":
+            print("add connection")
             (i, j) = self.random_pair()
             self.add_edge(i, j, random.uniform(-1, 1))
         elif choice == "weight_perturb" or choice == "weight_set":
             self.shift_weight(choice)
+            print(choice)
         elif choice == "bias_perturb" or choice == "bias_set":
             self.shift_bias(choice)
+            print(choice)
 
         self.reset()
 

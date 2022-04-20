@@ -3,6 +3,7 @@ from connection_history import ConnectionHistory
 
 from node import Node
 from genome import Genome
+from species import *
 from hyperparameters import *
 
 import random
@@ -63,16 +64,13 @@ def main():
     network_display = pygame.Surface((NETWORK_WIDTH, HEIGHT))
     
     hyperparameters = Hyperparameters()
+    
     default_activation = hyperparameters.default_activation
-    ch = ConnectionHistory(4,1)
-    g = Genome(ch,9,default_activation,True)
-    g.forward([10,1,2,3])
+    ch = ConnectionHistory(4,1,9)
+    g = Genome(ch,default_activation,True)
+    
 
-    # for n in range(g.total_nodes):
-    #     print(g._nodes[n].output)
-    for n in (g._connections):
-        g._connections[n].showConn()
-        # print(g._connections[n].in_node.number,g._connections[n].out_node.number)
+
     
     # print(len(g._nodes))
     while True:
@@ -90,6 +88,8 @@ def main():
             pygame.image.save(display,'graph.jpg')
             break
         time.sleep(0.5)
+        output = g.forward([10,1,2,3])
+        print(output)
         print(">==============================================================================================<")
         for n in (g._connections):
             g._connections[n].showConn()

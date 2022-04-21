@@ -8,4 +8,5 @@ class Connection(object):
         self.innovation = 0 
 
     def showConn(self):
-        print("Connection innovation #", self.innovation, "Between", self.in_node.number, "in-layer",self.in_node.layer,"->", self.out_node.number, "out-layer",self.out_node.layer, "weight:", self.weight, "status:", self.enabled)
+        print("Connection innovation #", self.innovation, "Between", self.in_node.number,"->", self.out_node.number, "weight:", self.weight, "status:", self.enabled)
+        print("{:>10s} {:>14d} -> {:>14d}".format("Layers:",self.in_node.layer,self.out_node.layer))

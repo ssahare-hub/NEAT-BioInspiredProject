@@ -72,7 +72,7 @@ class Brain(object):
         """
         if not self._species:
             # Empty population
-            self._species.append(Specie(
+            self._species.append(Species(
                     self._hyperparams.max_fitness_history, genome
                 )
             )
@@ -88,7 +88,7 @@ class Brain(object):
                     return
 
             # Doesn't fit with any other specie, create a new one
-            self._species.append(Specie(
+            self._species.append(Species(
                     self._hyperparams.max_fitness_history, genome
                 )
             )

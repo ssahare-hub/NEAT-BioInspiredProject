@@ -14,7 +14,7 @@ from pygame.locals import *
 
 # Constants
 WIDTH, HEIGHT = 640, 680
-NETWORK_WIDTH = 680
+NETWORK_WIDTH = 580
 
 DRAW_NETWORK = True
 
@@ -45,7 +45,8 @@ def generate_visualized_network(genome, nodes):
 def render_visualized_network(genome, nodes, display):
     """Render the visualized neural network"""
     genes = genome.get_connections()
-    for innovation in genes:
+    sorted_innovations = sorted(genes,key=lambda g: g)
+    for innovation in sorted_innovations:
         connection = genes[innovation]
         if connection.enabled: # Enabled or disabled connection
             color = (0, 255, 0)
@@ -60,39 +61,65 @@ def render_visualized_network(genome, nodes, display):
 
 def main():
     pygame.init()
-    display = pygame.display.set_mode((NETWORK_WIDTH, HEIGHT), 0, 32)
-    network_display = pygame.Surface((NETWORK_WIDTH, HEIGHT))
+    display = pygame.display.set_mode((3*NETWORK_WIDTH, HEIGHT), 0, 32)
+    p1_network_display = pygame.Surface((NETWORK_WIDTH, HEIGHT))
+    p2_network_display = pygame.Surface((2*NETWORK_WIDTH, HEIGHT))
+    c1_network_display = pygame.Surface((3*NETWORK_WIDTH, HEIGHT))
     
     hyperparameters = Hyperparameters()
     
     default_activation = hyperparameters.default_activation
     ch = ConnectionHistory(4,1,9)
     g = Genome(ch,default_activation,True)
+    g2 = Genome(ch,default_activation,True)
     
 
-
-    
-    # print(len(g._nodes))
-    while True:
-        network_display.fill(WHITE)
-        nodes = {}
-        generate_visualized_network(g, nodes)
+    for i in range(100):
+        p1_network_display.fill(WHITE)
+        p2_network_display.fill(WHITE)
+        c1_network_display.fill(WHITE)
+        p1_nodes = {}
+        p2_nodes = {}
+        
+        generate_visualized_network(g, p1_nodes)
+        generate_visualized_network(g2, p2_nodes)
         if DRAW_NETWORK:
-            render_visualized_network(g, nodes, network_display)
-        display.blit(network_display, (0, 0))
+            render_visualized_network(g, p1_nodes, p1_network_display)
+            render_visualized_network(g2, p2_nodes, p2_network_display)
+        display.blit(p1_network_display, (0, 0))
+        display.blit(p2_network_display, (NETWORK_WIDTH, 0))
+        
         pygame.display.update()
         try:
             g.mutate(hyperparameters.mutation_probabilities)
+            g2.mutate(hyperparameters.mutation_probabilities)
+
+            g._fitness = g.forward([10,1,2,3])
+            g2._fitness = g2.forward([10,1,2,3])
+            if i>2 and not i%10:
+                print("crossover",i)
+                c1 = genomic_crossover(g,g2)
+                for n in sorted(c1._connections,key=lambda g: g):
+                    c1._connections[n].showConn()
+                for n in c1._nodes:
+                    print(n,c1._nodes[n].number)
+                
         except Exception as e:
             print(e)
             pygame.image.save(display,'graph.jpg')
             break
+        
+        if 'c1' in locals():
+            c1_nodes = {}
+            generate_visualized_network(c1, c1_nodes)
+            render_visualized_network(c1, c1_nodes, c1_network_display)
+            display.blit(c1_network_display, (2*NETWORK_WIDTH, 0))
+            pygame.display.update()
+            print(g.forward([10,1,2,3]),g2.forward([10,1,2,3]),c1.forward([10,1,2,3]))
         time.sleep(0.5)
-        output = g.forward([10,1,2,3])
-        print(output)
         print(">==============================================================================================<")
-        for n in (g._connections):
-            g._connections[n].showConn()
+        # for n in (g._connections):
+        #     g._connections[n].showConn()
 
         # genes = g.get_connections()
         # for connection in genes:

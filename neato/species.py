@@ -43,7 +43,7 @@ def genomic_crossover(a, b):
         if n in b._nodes:
             inherit_from.append(b)
 
-        random.shuffle(inherit_from)
+        # random.shuffle(inherit_from)
         parent = max(inherit_from, key=lambda p: p._fitness)
         child._nodes[n] = copy.deepcopy(parent._nodes[n])
 
@@ -51,7 +51,7 @@ def genomic_crossover(a, b):
     return child
 
 
-class Specie(object):
+class Species(object):
     """A specie represents a set of genomes whose genomic distances 
     between them fall under the Brain's delta threshold.
     """

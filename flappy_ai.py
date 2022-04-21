@@ -116,7 +116,8 @@ def generate_visualized_network(genome, nodes):
 def render_visualized_network(genome, nodes, display):
     """Render the visualized neural network"""
     genes = genome.get_connections()
-    for innovation in genes:
+    sorted_innovations = sorted(genes,key=lambda g: g)
+    for innovation in sorted_innovations:
         connection = genes[innovation]
         if connection.enabled: # Enabled or disabled connection
             color = (0, 255, 0)

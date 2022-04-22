@@ -4,6 +4,7 @@
 import sys
 import os
 import random
+from neato.genome import Genome
 import pygame
 from pygame.locals import *
 
@@ -95,7 +96,7 @@ def generate_pipes(pipes):
     p2 = Pipe(WIDTH, y+(th/2+HEIGHT/2))
     pipes.extend([p1, p2])
 
-def generate_visualized_network(genome, nodes):
+def generate_visualized_network(genome: Genome, nodes):
     """Generate the positions/colors of the neural network nodes"""
     for i in genome.get_nodes():
         if genome.is_input(i):
@@ -113,7 +114,7 @@ def generate_visualized_network(genome, nodes):
             y = random.randint(20, HEIGHT-20)
         nodes[i] = [(int(x), int(y)), color]
 
-def render_visualized_network(genome, nodes, display):
+def render_visualized_network(genome: Genome, nodes, display):
     """Render the visualized neural network"""
     genes = genome.get_connections()
     sorted_innovations = sorted(genes,key=lambda g: g)

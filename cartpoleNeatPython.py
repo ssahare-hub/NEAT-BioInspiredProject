@@ -24,9 +24,9 @@ def eval_genome(genome, config):
         done = False
         while not done:
 
-            action = net.activate(observation)
+            action = net.activate(observation)[0]
             #print(action)
-            observation, reward, done, info = env.step(np.argmax(action) )
+            observation, reward, done, info = env.step(action <= 0.5 )
             fitness += reward
 
         fitnesses.append(fitness)

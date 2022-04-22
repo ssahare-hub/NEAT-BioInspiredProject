@@ -1,9 +1,9 @@
-from genome import Genome
-from hyperparameters import *
-from connection_history import *
-from species import *
 import pickle
 import multiprocessing as mp
+from .genome import *
+from .hyperparameters import *
+from .connection_history import *
+from .species import *
 
 
 def genomic_distance(a: Node, b: Node, distance_weights: dict):

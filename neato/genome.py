@@ -1,13 +1,13 @@
+from __future__ import annotations
 from collections import defaultdict
 from typing import Callable, Dict, List, Tuple
 import numpy as np
 import random
 import copy
 import itertools
-from connection_history import *
-from node import *
-from connection import *
-from __future__ import annotations
+from .connection_history import *
+from .node import *
+from .connection import *
 
 
 class Genome(object):

@@ -1,8 +1,8 @@
 import random
 import math
 import copy
-from genome import *
-from node import *
+from .genome import *
+from .node import *
 
 
 def genomic_crossover(a: Node, b: Node) -> Node:

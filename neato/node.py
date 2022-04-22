@@ -1,6 +1,5 @@
 from typing import Callable, List
-
-from connection import *
+from .connection import *
 
 class Node(object):
     def __init__(self, n: int, l: int, activation: Callable):

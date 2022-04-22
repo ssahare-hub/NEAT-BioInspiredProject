@@ -1,6 +1,6 @@
 from typing import List
-from connection import *
-from node import *
+from .connection import *
+from .node import *
 
 
 class ConnectionHistory(object):

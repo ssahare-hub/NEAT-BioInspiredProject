@@ -1,15 +1,16 @@
 # pip3 install gym
-# pip3 install neat-python
-
 # for gym stuff: 
 # apt install xvfb ffmpeg xorg-dev libsdl2-dev swig cmake
 # pip3 install gym[box2d]
 
+
+
+# To use render environment need to use only one cpu in brain and uncomment render part
+#  or it will become frozen. (Probably way to fix this....)
 import multiprocessing
 import os
 import pickle
 
-import neat
 import numpy as np
 #import cart_pole
 import gym
@@ -33,8 +34,8 @@ def evaluate(genome):
         fitness = 0.
         done = False
         while not done:
-            #if i == 1:
-                #env.render()
+            #if i == 0:
+            #    env.render()
             action = genome.forward(observation)[0]
 
             observation, reward, done, info = env.step(action <= 0.5)
@@ -51,9 +52,17 @@ def evaluate(genome):
 def run():
 
     hyperparams = Hyperparameters()
-    hyperparams.max_generations = 300
+    #hyperparams.max_generations = 300
+    hyperparams.delta_threshold = 0.75
+    hyperparams.mutation_probabilities['node'] = 0.05
+    hyperparams.mutation_probabilities['edge'] = 0.05
 
-    brain = Brain(4, 1, 100, hyperparams)
+    inputs = 4
+    outputs = 1
+    hidden_layers = 6
+    population = 400
+    
+    brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
     brain.generate()
 
     
@@ -64,10 +73,11 @@ def run():
         # Print training progress
         current_gen = brain.get_generation()
         current_best = brain.get_fittest()
-        print("Current Accuracy: {:.2f}% | Generation {}/{}".format(
-            current_best.get_fitness() * 100, 
-            current_gen, 
-            hyperparams.max_generations
+        print("Current Accuracy: {0} | Current species: {1} | Current genome: {2} | Current gen: {3}".format(
+            current_best.get_fitness(), 
+            brain.get_current_species()+1, 
+            brain.get_current_genome()+1,
+            current_gen
         ))
 
 

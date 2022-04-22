@@ -1,8 +1,7 @@
 from connection import Connection
 from connection_history import ConnectionHistory
 
-from node import Node
-from genome import Genome
+from genome import *
 from species import *
 from hyperparameters import *
 
@@ -24,7 +23,7 @@ WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
 
 
-def generate_visualized_network(genome, nodes):
+def generate_visualized_network(genome: Genome, nodes):
     """Generate the positions/colors of the neural network nodes"""
     for i in genome.get_nodes():
         if genome.is_input(i):
@@ -42,7 +41,7 @@ def generate_visualized_network(genome, nodes):
             y = random.randint(20, HEIGHT-20)
         nodes[i] = [(int(x), int(y)), color]
 
-def render_visualized_network(genome, nodes, display):
+def render_visualized_network(genome: Genome, nodes, display):
     """Render the visualized neural network"""
     genes = genome.get_connections()
     sorted_innovations = sorted(genes,key=lambda g: g)

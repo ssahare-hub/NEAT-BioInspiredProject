@@ -2,8 +2,10 @@ import random
 import math
 import copy
 from genome import *
+from node import *
 
-def genomic_crossover(a, b):
+
+def genomic_crossover(a: Node, b: Node) -> Node:
     """Breed two genomes and return the child. Matching genes
     are inherited randomly, while disjoint genes are inherited
     from the fitter parent.
@@ -12,28 +14,44 @@ def genomic_crossover(a, b):
     child = Genome(a.connection_history, a._default_activation)
     a_in = set(a._connections)
     b_in = set(b._connections)
+    matching_connections = a_in & b_in
+    total_nodes = set()
 
     # Inherit homologous gene from a random parent
-    for i in a_in & b_in:
+    for i in matching_connections:
         parent = random.choice([a, b])
         child._connections[i] = copy.deepcopy(parent._connections[i])
+        # NOTE: testing alternate method to keep track of total nodes
+        total_nodes.add(child._connections[i].in_node.number)
+        total_nodes.add(child._connections[i].out_node.number)
 
     # Inherit disjoint/excess genes from fitter parent
-    if a._fitness > b._fitness:
-        for i in a_in - b_in:
-            child._connections[i] = copy.deepcopy(a._connections[i])
-    else:
-        for i in b_in - a_in:
-            child._connections[i] = copy.deepcopy(b._connections[i])
-    
-    # Calculate max node
+    disjoint_connections = a_in - b_in
+    parent = a
+
+    if a._fitness <= b._fitness:
+        disjoint_connections = b_in - a_in
+        parent = b
+
+    for i in disjoint_connections:
+        child._connections[i] = copy.deepcopy(parent._connections[i])
+        # NOTE: testing alternate method to keep track of total nodes
+        total_nodes.add(child._connections[i].in_node.number)
+        total_nodes.add(child._connections[i].out_node.number)
+
+    # Calculate total nodes
     child._total_nodes = 0
     for innovation in child._connections:
         in_node = child._connections[innovation].in_node.number
         out_node = child._connections[innovation].out_node.number
         current_max = max(in_node, out_node)
         child._total_nodes = max(child._total_nodes, current_max)
+
     child._total_nodes += 1
+    # NOTE: testing alternate method to keep track of total nodes
+    if len(total_nodes) != child._total_nodes:
+        print(list(sorted(total_nodes)))
+        print(child._total_nodes)
 
     # Inherit nodes
     for n in range(child._total_nodes):
@@ -47,27 +65,29 @@ def genomic_crossover(a, b):
         parent = max(inherit_from, key=lambda p: p._fitness)
         child._nodes[n] = copy.deepcopy(parent._nodes[n])
 
+    # reset the output values of all nodes
     child.reset()
     return child
 
 
 class Species(object):
-    """A specie represents a set of genomes whose genomic distances 
+    """A Species represents a set of genomes whose genomic distances 
     between them fall under the Brain's delta threshold.
     """
-    def __init__(self, max_fitness_history, *members):
+
+    def __init__(self, max_fitness_history: int, *members):
         self._members = list(members)
         self._fitness_history = []
         self._fitness_sum = 0
         self._max_fitness_history = max_fitness_history
 
-    def breed(self, mutation_probabilities, breed_probabilities):
+    def breed(self, mutation_probabilities: dict, breed_probabilities: dict) -> Node:
         """Return a child as a result of either a mutated clone
         or crossover between two parent genomes.
         """
         # Either mutate a clone or breed two random genomes
         population = list(breed_probabilities.keys())
-        probabilities= [breed_probabilities[k] for k in population]
+        probabilities = [breed_probabilities[k] for k in population]
         choice = random.choices(population, weights=probabilities)[0]
 
         if choice == "asexual" or len(self._members) == 1:
@@ -76,11 +96,12 @@ class Species(object):
         elif choice == "sexual":
             (mom, dad) = random.sample(self._members, 2)
             child = genomic_crossover(mom, dad)
-        
+
+        # NOTE: do we add mutation after sexual crossover?
         # child.mutate(mutation_probabilities)
         return child
 
-    def update_fitness(self):
+    def update_fitness(self) -> None:
         """Update the adjusted fitness values of each genome 
         and the historical fitness."""
         for g in self._members:
@@ -91,8 +112,8 @@ class Species(object):
         if len(self._fitness_history) > self._max_fitness_history:
             self._fitness_history.pop(0)
 
-    def cull_genomes(self, fittest_only):
-        """Exterminate the weakest genomes per specie."""
+    def cull_genomes(self, fittest_only: bool) -> None:
+        """Exterminate the weakest genomes per Species."""
         self._members.sort(key=lambda g: g._fitness, reverse=True)
         if fittest_only:
             # Only keep the winning genome
@@ -103,11 +124,11 @@ class Species(object):
 
         self._members = self._members[:remaining]
 
-    def get_best(self):
+    def get_best(self) -> Node:
         """Get the member with the highest fitness score."""
         return max(self._members, key=lambda g: g._fitness)
 
-    def can_progress(self):
+    def can_progress(self) -> bool:
         """Determine whether species should survive the culling."""
         n = len(self._fitness_history)
         avg = sum(self._fitness_history) / n

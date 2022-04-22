@@ -1,53 +1,58 @@
-from genome import *
+from genome import Genome
 from hyperparameters import *
-from neato.connection_history import ConnectionHistory
+from connection_history import *
 from species import *
 import pickle
 import multiprocessing as mp
 
 
-def genomic_distance(a, b, distance_weights):
+def genomic_distance(a: Node, b: Node, distance_weights: dict):
     """Calculate the genomic distance between two genomes."""
     a_connections = set(a._connections)
     b_connections = set(b._connections)
 
     # Does not distinguish between disjoint and excess
     matching_connections = a_connections & b_connections
-    disjoint_connections = (a_connections - b_connections) | (b_connections - a_connections)
-    N_connections = len(max(a_connections, b_connections, key=len))
-    N_nodes = min(a._total_nodes, b._total_nodes)
+    disjoint_connections = (
+        a_connections - b_connections) | (b_connections - a_connections)
+    num_max_connections = len(max(a_connections, b_connections, key=len))
+    num_min_nodes = min(a._total_nodes, b._total_nodes)
 
     weight_diff = 0
     for i in matching_connections:
         weight_diff += abs(a._connections[i].weight - b._connections[i].weight)
 
     bias_diff = 0
-    for i in range(N_nodes):
+    for i in range(num_min_nodes):
         bias_diff += abs(a._nodes[i].bias - b._nodes[i].bias)
 
-    t1 = distance_weights['disjoint_connections'] * len(disjoint_connections)/N_connections
-    t2 = distance_weights['matching_connections'] * len(matching_connections)/N_connections
+    t1 = distance_weights['disjoint_connections'] * \
+        len(disjoint_connections)/num_max_connections
+    t2 = distance_weights['matching_connections'] * \
+        len(matching_connections)/num_max_connections
     t3 = distance_weights['weight'] * weight_diff/len(matching_connections)
-    t4 = distance_weights['bias'] * bias_diff/N_nodes
-    return t1  + t3 + t4 #+ t2
+    t4 = distance_weights['bias'] * bias_diff/num_min_nodes
+    return t1 + t3 + t4  # + t2
 
 
 class Brain(object):
     """Base class for a 'brain' that learns through the evolution
     of a population of genomes.
     """
-    def __init__(self, inputs, outputs, hidden_layers, population=100, hyperparams=Hyperparameters()):
+
+    def __init__(self, inputs: int, outputs: int, hidden_layers: int, population: int = 100, hyperparams: Hyperparameters = Hyperparameters()):
         self._inputs = inputs
         self._outputs = outputs
         self._hidden_layers = hidden_layers
-        self._connection_history = ConnectionHistory(inputs,outputs,hidden_layers)
+        self._connection_history = ConnectionHistory(
+            inputs, outputs, hidden_layers)
 
         self._species = []
         self._population = population
 
         # Hyper-parameters
         self._hyperparams = hyperparams
-        
+
         self._generation = 0
         self._current_species = 0
         self._current_genome = 0
@@ -56,17 +61,17 @@ class Brain(object):
 
     def generate(self):
         """Generate the initial population of genomes."""
-        for i in range(self._population):
-            g = Genome(self._connection_history, 
+        for _ in range(self._population):
+            g = Genome(self._connection_history,
                        self._hyperparams.default_activation)
             g.createNetwork()
             self.classify_genome(g)
         print("generating genome for population")
-        
+
         # Set the initial best genome
         self._global_best = self._species[0]._members[0]
 
-    def classify_genome(self, genome):
+    def classify_genome(self, genome: Genome):
         """Classify genomes into species via the genomic
         distance algorithm.
         """
@@ -77,9 +82,9 @@ class Brain(object):
                 )
             )
         else:
-            # Compare genome against representative s[0] in each specie
+            # Compare genome against representative s[0] in each Species
             for s in self._species:
-                rep =  s._members[0]
+                rep = s._members[0]
                 dist = genomic_distance(
                     genome, rep, self._hyperparams.distance_weights
                 )
@@ -124,7 +129,7 @@ class Brain(object):
                     surviving_species.append(s)
             self._species = surviving_species
 
-            # Eliminate lowest performing genomes per specie
+            # Eliminate lowest performing genomes per Species
             for s in self._species:
                 s.cull_genomes(False)
 
@@ -136,7 +141,7 @@ class Brain(object):
                 for j in range(offspring):
                     self.classify_genome(
                         s.breed(
-                            self._hyperparams.mutation_probabilities, 
+                            self._hyperparams.mutation_probabilities,
                             self._hyperparams.breed_probabilities
                         )
                     )
@@ -145,10 +150,10 @@ class Brain(object):
             # Repopulate using mutated minimal structures and global best
             if not self._species:
                 for i in range(self._population):
-                    if i%3 == 0:
+                    if i % 3 == 0:
                         g = self._global_best.clone()
                     else:
-                        g = Genome(self._inputs, self._outputs, 
+                        g = Genome(self._inputs, self._outputs,
                                    self._hyperparams.default_activation)
                         g.generate()
                     g.mutate(self._hyperparams.mutation_probabilities)
@@ -183,7 +188,7 @@ class Brain(object):
                 self._current_species = 0
                 self._current_genome = 0
 
-    def evaluate_parallel(self, evaluator, *args, **kwargs):
+    def evaluate_parallel(self, evaluator: Callable, *args, **kwargs):
         """Evaluate the entire population on separate processes
         to progress training. The evaluator function must take a Genome
         as its first parameter and return a numerical fitness score.
@@ -193,13 +198,13 @@ class Brain(object):
         """
         max_proc = max(mp.cpu_count()-1, 1)
         pool = mp.Pool(processes=max_proc)
-        
+
         results = {}
         for i in range(len(self._species)):
             for j in range(len(self._species[i]._members)):
                 results[(i, j)] = pool.apply_async(
-                    evaluator, 
-                    args=[self._species[i]._members[j]]+list(args), 
+                    evaluator,
+                    args=[self._species[i]._members[j]]+list(args),
                     kwds=kwargs
                 )
 
@@ -240,7 +245,7 @@ class Brain(object):
         """Get the list of species and their respective member genomes."""
         return self._species
 
-    def save(self, filename):
+    def save(self, filename: str):
         """Save an instance of the population to disk."""
         with open(filename+'.neat', 'wb') as _out:
             pickle.dump(self, _out, pickle.HIGHEST_PROTOCOL)

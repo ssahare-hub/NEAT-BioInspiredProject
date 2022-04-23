@@ -23,7 +23,6 @@ from neato.brain import Brain
 from neato.hyperparameters import Hyperparameters, tanh
 
 
-
 def evaluate(genome):
     """Evaluates the current genome."""
     fitnesses = []
@@ -39,7 +38,7 @@ def evaluate(genome):
             #    env.render()
             action = genome.forward(observation)[0]
 
-            observation, reward, done, info = env.step(action*2)
+            observation, reward, done, info = env.step([action*2])
             #print('observation: ', observation)
             #print("action ",action)
             #print("reward ", reward)
@@ -47,7 +46,7 @@ def evaluate(genome):
         #env.close()
         print("fitness ", fitness)
         fitnesses.append(fitness)
-
+    sys.stdout.flush()
     return np.mean(fitnesses)
 
 def run():

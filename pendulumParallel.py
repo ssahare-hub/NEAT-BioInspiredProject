@@ -20,7 +20,7 @@ import sys
 
 sys.path.append('./neato')
 from neato.brain import Brain
-from neato.hyperparameters import Hyperparameters
+from neato.hyperparameters import Hyperparameters, tanh
 
 
 
@@ -28,7 +28,7 @@ def evaluate(genome):
     """Evaluates the current genome."""
     fitnesses = []
     for i in range(4):
-        env = gym.make("CartPole-v1")
+        env = gym.make("Pendulum-v1")
         env._max_episode_steps = 750
         observation = env.reset()
 
@@ -39,7 +39,7 @@ def evaluate(genome):
             #    env.render()
             action = genome.forward(observation)[0]
 
-            observation, reward, done, info = env.step(action <= 0.5)
+            observation, reward, done, info = env.step(action*2)
             #print('observation: ', observation)
             #print("action ",action)
             #print("reward ", reward)
@@ -54,11 +54,13 @@ def run():
 
     hyperparams = Hyperparameters()
     #hyperparams.max_generations = 300
+    hyperparams.default_activation = tanh
     hyperparams.delta_threshold = 0.75
     hyperparams.mutation_probabilities['node'] = 0.05
     hyperparams.mutation_probabilities['connection'] = 0.05
+    hyperparams.max_fitness = 0
 
-    inputs = 4
+    inputs = 3
     outputs = 1
     hidden_layers = 6
     population = 400

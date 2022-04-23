@@ -167,6 +167,7 @@ class Brain(object):
         """
         self.update_fittest()
         fit = self._global_best._fitness <= self._hyperparams.max_fitness
+        print(self._global_best._fitness,self._hyperparams.max_fitness)
         end = self._generation != self._hyperparams.max_generations
 
         return fit and end

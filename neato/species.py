@@ -61,7 +61,6 @@ def genomic_crossover(a: Node, b: Node) -> Node:
         if n in b._nodes:
             inherit_from.append(b)
 
-        # random.shuffle(inherit_from)
         parent = max(inherit_from, key=lambda p: p._fitness)
         child._nodes[n] = copy.deepcopy(parent._nodes[n])
 
@@ -92,11 +91,13 @@ class Species(object):
 
         if choice == "asexual" or len(self._members) == 1:
             child = random.choice(self._members).clone()
-            child.mutate(mutation_probabilities)
+            # child.mutate(mutation_probabilities)
         elif choice == "sexual":
             (mom, dad) = random.sample(self._members, 2)
             child = genomic_crossover(mom, dad)
 
+        if random.random() <= mutation_probabilities['mutate']:
+            child.mutate(mutation_probabilities)
         # NOTE: do we add mutation after sexual crossover?
         # child.mutate(mutation_probabilities)
         return child

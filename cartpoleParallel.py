@@ -57,6 +57,7 @@ def run():
     hyperparams.delta_threshold = 0.75
     hyperparams.mutation_probabilities['node'] = 0.05
     hyperparams.mutation_probabilities['connection'] = 0.05
+    hyperparams.max_fitness = 749
 
     inputs = 4
     outputs = 1
@@ -74,6 +75,7 @@ def run():
 
         # Print training progress
         current_gen = brain.get_generation()
+        brain.update_fittest()
         current_best = brain.get_fittest()
         print("Current Accuracy: {0} | Current species: {1} | Current genome: {2} | Current gen: {3}".format(
             current_best.get_fitness(), 

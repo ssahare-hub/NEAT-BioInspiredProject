@@ -210,9 +210,10 @@ class Brain(object):
                 )
 
         for key in results:
-            print(results[key].get())
+
+            print(results[key])
             genome = self._species[key[0]]._members[key[1]]
-            genome.set_fitness(results[key].get())
+            genome.set_fitness(results[key])
 
         pool.close()
         pool.join()

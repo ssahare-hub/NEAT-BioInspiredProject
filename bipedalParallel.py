@@ -68,13 +68,17 @@ def run():
         # Print training progress
         current_gen = brain.get_generation()
         brain.update_fittest()
-        current_best = brain.get_fittest()
-        print("Current Accuracy: {0} | Current species: {1} | Current genome: {2} | Current gen: {3}".format(
-            current_best.get_fitness(), 
-            brain.get_current_species()+1, 
-            brain.get_current_genome()+1,
-            current_gen
-        ))
+        current_best = brain.get_all_time_fittest()
+        mean_fitness = brain.get_all_time_fittest()
+        print(
+            "Mean Fitness: {4} | Current Accuracy: {0} | Current species: {1} | Current genome: {2} | Current gen: {3}".format(
+                current_best.get_fitness(), 
+                brain.get_current_species()+1, 
+                brain.get_current_genome()+1,
+                current_gen, 
+                mean_fitness
+            )
+        )
 
     with open('bipedal_best_individual', 'wb') as f:
         pickle.dump(current_best, f)

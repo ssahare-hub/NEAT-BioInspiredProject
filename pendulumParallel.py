@@ -59,10 +59,10 @@ def run():
     hyperparams.delta_threshold = 0.75
     hyperparams.mutation_probabilities['node'] = 0.05
     hyperparams.mutation_probabilities['connection'] = 0.05
-    hyperparams.mutation_probabilities['mutate'] = 0.25
+    hyperparams.mutation_probabilities['mutate'] = 0.75
     hyperparams.fitness_offset = 17*EPISODE_DURATION
     hyperparams.max_fitness = hyperparams.fitness_offset
-    hyperparams.max_generations = 15
+    hyperparams.max_generations = 30
 
     inputs = 3
     outputs = 1
@@ -89,7 +89,7 @@ def run():
             current_gen
         ))
 
-    with open('best_genome', 'wb') as f:
+    with open('pendulum_best_individual', 'wb') as f:
         pickle.dump(current_best, f)
 
 if __name__ == '__main__':

@@ -263,13 +263,13 @@ class Genome(object):
             m = 0
             while innovation in self._connections:
                 m += 1
-                print("iteration in random pair",m)
+                # print("iteration in random pair",m)
                 i = random.choice(
                     [n for n in range(self._total_nodes) if not self.is_output(n)])
                 j_list = [n for n in range(self._total_nodes) if not self.is_input(
                     n) and n != i and self._nodes[n].layer > self._nodes[i].layer]
                 
-                print(j_list)
+                # print(j_list)
 
                 if not j_list:
                     j = self._total_nodes

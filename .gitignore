@@ -132,3 +132,7 @@ dmypy.json
 
 *.neat
 *.jpg
+
+best_genome
+pendulum_best_individual
+mountaincar_best_individual

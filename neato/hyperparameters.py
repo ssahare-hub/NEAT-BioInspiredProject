@@ -49,5 +49,5 @@ class Hyperparameters(object):
             'weight_set': 0.01,
             'bias_perturb': 0.03,
             'bias_set': 0.01,
-            're-enable': 0.0005
+            're-enable': 0.009
         }

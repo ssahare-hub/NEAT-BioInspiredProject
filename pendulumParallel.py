@@ -59,15 +59,15 @@ def run():
     hyperparams.delta_threshold = 0.75
     hyperparams.mutation_probabilities['node'] = 0.05
     hyperparams.mutation_probabilities['connection'] = 0.05
-    hyperparams.mutation_probabilities['mutate'] = 0.75
+    hyperparams.mutation_probabilities['mutate'] = 0.05
     hyperparams.fitness_offset = 17*EPISODE_DURATION
     hyperparams.max_fitness = hyperparams.fitness_offset
     hyperparams.max_generations = 30
 
     inputs = 3
     outputs = 1
-    hidden_layers = 6
-    population = 400
+    hidden_layers = 9
+    population = 1000
     
     brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
     brain.generate()
@@ -82,10 +82,10 @@ def run():
         current_gen = brain.get_generation()
         brain.update_fittest()
         current_best = brain.get_fittest()
-        print("Current Accuracy: {0} | Current species: {1} | Current genome: {2} | Current gen: {3}".format(
+        print("Current Accuracy: {0} | Total species: {1} | Total Population: {2} | Current gen: {3}".format(
             current_best.get_fitness(), 
-            brain.get_current_species()+1, 
-            brain.get_current_genome()+1,
+            len(brain._species), 
+            brain.get_population(),
             current_gen
         ))
 

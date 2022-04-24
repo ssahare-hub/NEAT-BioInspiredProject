@@ -136,3 +136,4 @@ dmypy.json
 best_genome
 pendulum_best_individual
 mountaincar_best_individual
+/pendulum_graphs

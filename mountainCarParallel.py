@@ -71,7 +71,7 @@ def run():
         brain.update_fittest()
         current_best = brain.get_all_time_fittest()
         mean_fitness = brain.get_average_fitness()
-        brain.save_fitness_history(mean_fitness)
+        brain.save_fitness_history()
         print(
             "Mean Fitness: {4} | Current Accuracy: {0} | Current species: {1} | Current genome: {2} | Current gen: {3}".format(
                 current_best.get_fitness(), 

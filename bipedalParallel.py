@@ -2,6 +2,7 @@ import multiprocessing
 import os
 import pickle
 
+import matplotlib.pyplot as plt
 import numpy as np
 #import cart_pole
 import gym
@@ -58,9 +59,15 @@ def run():
     hidden_layers = 2
     population = 20
     
-    brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
-    brain.generate()
-    
+    if os.path.isfile('bipedal.neat'):
+        brain = Brain.load('bipedal')
+        brain._hyperparams = hyperparams
+    else:    
+        brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
+        brain.generate()
+        print(hyperparams.max_fitness)
+
+    current_best = None
     print("Training...")
     while brain.should_evolve():
         brain.evaluate_parallel(evaluate)
@@ -69,7 +76,7 @@ def run():
         current_gen = brain.get_generation()
         brain.update_fittest()
         current_best = brain.get_all_time_fittest()
-        mean_fitness = brain.get_all_time_fittest()
+        mean_fitness = brain.get_average_fitness()
         print(
             "Mean Fitness: {4} | Current Accuracy: {0} | Current species: {1} | Current genome: {2} | Current gen: {3}".format(
                 current_best.get_fitness(), 
@@ -79,9 +86,17 @@ def run():
                 mean_fitness
             )
         )
+        sys.stdout.flush()
+        #print('saving current population')
+        #brain.save('bipedal')
 
+    print('done')
     with open('bipedal_best_individual', 'wb') as f:
         pickle.dump(current_best, f)
+
+    plt.title('fitness over generations')
+    plt.plot(brain.get_fitness_history())
+    plt.show()
 
 if __name__ == '__main__':
     run()

@@ -69,7 +69,7 @@ def run():
         # Print training progress
         current_gen = brain.get_generation()
         brain.update_fittest()
-        current_best = brain.get_fittest()
+        current_best = brain.get_all_time_fittest()
         mean_fitness = brain.get_average_fitness()
         brain.save_fitness_history(mean_fitness)
         print(

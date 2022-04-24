@@ -108,6 +108,12 @@ class Brain(object):
         if current_top._fitness > self._global_best._fitness:
             self._global_best = current_top.clone()
 
+    def get_current_fittest(self):
+        """Update the highest fitness score of the whole population."""
+        top_performers = [s.get_best() for s in self._species]
+        current_top = max(top_performers, key=lambda g: g._fitness)
+        return current_top.clone()
+    
     def evolve(self):
         """Evolve the population by eliminating the poorest performing
         genomes and repopulating with mutated children, prioritizing
@@ -230,7 +236,7 @@ class Brain(object):
         # print('Evolving')
         self.evolve()
 
-    def get_fittest(self):
+    def get_all_time_fittest(self):
         """Return the genome with the highest global fitness score."""
         return self._global_best
 

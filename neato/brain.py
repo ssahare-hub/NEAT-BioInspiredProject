@@ -210,9 +210,10 @@ class Brain(object):
                 )
 
         for key in results:
-            print(results[key].get())
+            # print(results[key].get())
             genome = self._species[key[0]]._members[key[1]]
-            genome.set_fitness(results[key].get())
+            print("New fitness",results[key].get()+self._hyperparams.fitness_offset)
+            genome.set_fitness(results[key].get()+self._hyperparams.fitness_offset)
 
         pool.close()
         pool.join()

@@ -22,13 +22,15 @@ sys.path.append('./neato')
 from neato.brain import Brain
 from neato.hyperparameters import Hyperparameters, tanh
 
+EPISODE_DURATION = 500
+
 
 def evaluate(genome):
     """Evaluates the current genome."""
     fitnesses = []
-    for i in range(4):
+    for i in range(5):
         env = gym.make("Pendulum-v1")
-        env._max_episode_steps = 750
+        env._max_episode_steps = EPISODE_DURATION
         observation = env.reset()
 
         fitness = 0.
@@ -44,7 +46,7 @@ def evaluate(genome):
             #print("reward ", reward)
             fitness += reward
         #env.close()
-        print("fitness ", fitness)
+        # print("fitness ", fitness)
         fitnesses.append(fitness)
     sys.stdout.flush()
     return np.mean(fitnesses)
@@ -57,7 +59,10 @@ def run():
     hyperparams.delta_threshold = 0.75
     hyperparams.mutation_probabilities['node'] = 0.05
     hyperparams.mutation_probabilities['connection'] = 0.05
-    hyperparams.max_fitness = 0
+    hyperparams.mutation_probabilities['mutate'] = 0.25
+    hyperparams.fitness_offset = 17*EPISODE_DURATION
+    hyperparams.max_fitness = hyperparams.fitness_offset
+    hyperparams.max_generations = 15
 
     inputs = 3
     outputs = 1

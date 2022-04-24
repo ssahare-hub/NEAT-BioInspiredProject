@@ -35,6 +35,7 @@ class Hyperparameters(object):
         self.max_fitness = float(500)
         self.max_generations = float('inf')
         self.max_fitness_history = 30
+        self.fitness_offset = 0
 
         self.breed_probabilities = {
             'asexual': 0.5,

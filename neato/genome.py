@@ -118,8 +118,7 @@ class Genome(object):
         return False
 
     def forward(self, inputs: List[float]) -> List[float]:
-        """Evaluate inputs and calculate the outputs of the
-        neural network via the forward propagation algorithm.
+        """Determines NN output through forward propagation 
         """
         if len(inputs) != self._inputs:
             raise ValueError("Incorrect number of inputs.")
@@ -161,7 +160,7 @@ class Genome(object):
         return [self._nodes[n].output for n in range(self._inputs, self._unhidden)]
 
     def mutate(self, probabilities: dict) -> None:
-        """Randomly mutate the genome to initiate variation."""
+        """Mutate genome randomly with mutation probabilities."""
         if self.is_disabled():
             self.add_enabled()
 
@@ -182,7 +181,7 @@ class Genome(object):
         elif choice == "connection":
             (i, j) = self.random_pair()
             self.add_connection(i, j, random.uniform(-1, 1))
-            print("add connection between:")
+            print("add connection between:",(i,j))
             # self._connections[(i, j)].showConn()
         elif choice == "weight_perturb" or choice == "weight_set":
             print(choice)
@@ -246,6 +245,7 @@ class Genome(object):
         1. i is not an output
         2. j is not an input
         3. i != j
+        4. i to j connection doesn't already exist
         """
         if self._total_nodes == self._inputs+self._outputs:
             i = random.choice(
@@ -284,14 +284,17 @@ class Genome(object):
 
     def is_input(self, n: int) -> bool:
         """Determine if the node id is an input."""
+        # return self._nodes[n].layer == self.input_layer
         return 0 <= n < self._inputs
 
     def is_output(self, n: int) -> bool:
         """Determine if the node id is an output."""
+        # return self._nodes[n].layer == self.output_layer
         return self._inputs <= n < self._unhidden
 
     def is_hidden(self, n: int) -> bool:
-        """Determine if the node id is hidden."""
+        """Determine if the node is in a hidden layer."""
+        # return self._nodes[n].layer != self.output_layer and  self._nodes[n].layer != self.input_layer
         return self._unhidden <= n < self._total_nodes
 
     def is_disabled(self) -> bool:
@@ -303,7 +306,7 @@ class Genome(object):
         return self._fitness
 
     def get_nodes(self) -> Dict[int, Node]:
-        """Get the nodes of the network."""
+        """Get the network's nodes"""
         return self._nodes.copy()
 
     def get_connections(self) -> Dict[int, Connection]:
@@ -319,14 +322,13 @@ class Genome(object):
         self._fitness = score
 
     def reset(self) -> None:
-        """Reset the genome's internal state."""
+        """Reset node outputs and fitness for genome."""
         for n in range(self._total_nodes):
             self._nodes[n].output = 0
         self._fitness = 0
 
     def clone(self) -> Genome:
-        """Return a clone of the genome.
-        """
+        """Return a clone of the genome."""
         return copy.deepcopy(self)
     # def add_node(self):
     #     # self.nodes.append(Node(self._total_nodes, np.random.randint(self.input_layer+1, self.output_layer),self.default_activation))

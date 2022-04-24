@@ -11,7 +11,7 @@ sys.path.append('./neato')
 from neato.brain import Brain
 from neato.hyperparameters import Hyperparameters
 
-EPISODE_DURATION = 500
+EPISODE_DURATION = 750
 def run():
     with open('pendulum_best_individual', 'rb') as f:
         genome = pickle.load(f)
@@ -33,7 +33,7 @@ def run():
         fitness += reward
         env.render()
 
-    print(fitness+17*EPISODE_DURATION)
+    print(fitness+0*EPISODE_DURATION)
 
 if __name__ == '__main__':
     run()

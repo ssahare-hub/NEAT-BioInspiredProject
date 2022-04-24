@@ -162,9 +162,10 @@ def run():
         brain.save('pendulum')
         generate_visualized_network(current_best, current_gen)
         # break
-
-    with open('pendulum_best_individual', 'wb') as f:
-        pickle.dump(current_best, f)
+        if current_best._fitness >= hyperparams.max_fitness:
+            print("saving current best")
+            with open('pendulum_best_individual', 'wb') as f:
+                pickle.dump(current_best, f)
     
     plt.figure()
     plt.title('fitness over generations')

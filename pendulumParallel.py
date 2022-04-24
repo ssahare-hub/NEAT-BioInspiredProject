@@ -54,29 +54,22 @@ def evaluate(genome:Genome):
             action = genome.forward(last_observation)[0]
 
             next_observation, reward, done, info = env.step([action*2])
-            #print('observation: ', observation)
-            #print("action ",action)
-            #print("reward ", reward)
             # reward = 25* np.exp(-1*(next_observation[0]-1)*(next_observation[0]-1)/0.001)-100*np.abs(10*0.5 - (10*0.5*next_observation[0] + 0.5*0.3333*next_observation[2] * next_observation[2])) + 100*np.abs(10*0.5 - (10*0.5*last_observation[0] + 0.5*0.3333*last_observation[2] * last_observation[2]))
-            # print(reward)
             fitness += reward
             last_observation = next_observation
-            # add a positive reward for being alive
-        #env.close()
-        # print("fitness ", fitness)
         fitnesses.append(fitness)
-    # print("mean fitness ", np.mean(fitnesses))
-    # print("global innovation rn is", genome.connection_history.global_innovation_count)
     sys.stdout.flush()
     return np.mean(fitnesses)
 
 def generate_visualized_network(genome: Genome,generation):
     """Generate the positions/colors of the neural network nodes"""
     nodes = {}
-    # for i in genome.get_nodes():
     genes = genome.get_connections()
-    fig, ax = plt.subplots()
+    fig = plt.figure(figsize=(12,12))
+    ax = fig.gca()
+    ax.axis('off')
     plt.title(f'Best Genome with fitness {genome.get_fitness()} Network')
+    # Generate the nodes dict with x,y position values and color values
     for innovation in genes:
         connection = genes[innovation]
         i, j = connection.in_node.number, connection.out_node.number
@@ -92,23 +85,29 @@ def generate_visualized_network(genome: Genome,generation):
                 y = HEIGHT/2
             else:
                 color = 'black'
-                # x = random.randint(NETWORK_WIDTH/3, int(NETWORK_WIDTH * (4.0/5)))
                 x = NETWORK_WIDTH/10 + NETWORK_WIDTH/(genome._hidden_layers+3) * genome._nodes[i].layer
                 y = random.randint(20, HEIGHT-20)
-            nodes[number] = [(int(x), int(y)), color]
-        if connection.enabled: # Enabled or disabled connection
+            nodes[number] = [(x, y), color]
+    # plot connections using lines
+    for innovation in genes:
+        connection = genes[innovation]
+        i, j = connection.in_node.number, connection.out_node.number
+        if connection.enabled: 
             color = 'green'
         else:
             color = 'red'
         x_values = [nodes[i][0][0], nodes[j][0][0]]
         y_values = [nodes[i][0][1], nodes[j][0][1]]
         ax.plot(x_values, y_values, color = color)
+    # plot the circles for the nodes
     for n in nodes:
-        circle = plt.Circle(nodes[n][0], NETWORK_WIDTH/(genome._hidden_layers+100), color=nodes[n][1])
-        ax.add_patch(circle)
+        circle = plt.Circle(nodes[n][0], NETWORK_WIDTH/(genome._hidden_layers+80), color=nodes[n][1])
+        ax.add_artist(circle)
+    # save graphs to file
     if not os.path.exists('pendulum_graphs'):
         os.makedirs('pendulum_graphs')
     plt.savefig(f'pendulum_graphs/{generation}._network.png')
+
 
 
 def run():
@@ -120,9 +119,9 @@ def run():
     hyperparams.mutation_probabilities['node'] = 0.05
     hyperparams.mutation_probabilities['connection'] = 0.05
     hyperparams.mutation_probabilities['mutate'] = 0.05
-    hyperparams.fitness_offset = 0 * EPISODE_DURATION
+    hyperparams.fitness_offset = 17 * EPISODE_DURATION
     hyperparams.max_fitness = hyperparams.fitness_offset
-    hyperparams.max_generations = 600
+    hyperparams.max_generations = 300
 
     inputs = 3
     outputs = 1
@@ -144,7 +143,6 @@ def run():
 
         # Print training progress
         current_gen = brain.get_generation()
-        brain.update_fittest()
         brain.save_fitness_history()
         brain.save_max_fitness_history()
         current_best = brain.get_current_fittest()
@@ -161,11 +159,16 @@ def run():
         print('saving current population')
         brain.save('pendulum')
         generate_visualized_network(current_best, current_gen)
-        # break
-        if current_best._fitness >= hyperparams.max_fitness:
-            print("saving current best")
-            with open('pendulum_best_individual', 'wb') as f:
+        # NOTE: I wanted to see intermediate results
+        # so saving genome whenever it beats the last best
+        if current_best.get_fitness() > brain._global_best.get_fitness():
+            with open(f'pendulum{current_gen}_best_individual', 'wb') as f:
                 pickle.dump(current_best, f)
+        brain.update_fittest()
+        # break
+
+    with open('pendulum_best_individual', 'wb') as f:
+        pickle.dump(brain._global_best, f)
     
     plt.figure()
     plt.title('fitness over generations')

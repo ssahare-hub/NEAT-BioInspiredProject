@@ -12,7 +12,6 @@ import os
 import pickle
 
 import numpy as np
-#import cart_pole
 import gym
 import math
 import os
@@ -23,11 +22,11 @@ from neato.brain import Brain
 from neato.hyperparameters import Hyperparameters
 
 
-
+runs_per_net=2
 def evaluate(genome):
     """Evaluates the current genome."""
     fitnesses = []
-    for i in range(4):
+    for i in range(runs_per_net):
         env = gym.make("CartPole-v1")
         env._max_episode_steps = 750
         observation = env.reset()
@@ -38,14 +37,10 @@ def evaluate(genome):
             #if i == 0:
             #    env.render()
             action = genome.forward(observation)[0]
-
+            #print(action)
             observation, reward, done, info = env.step(action <= 0.5)
-            #print('observation: ', observation)
-            #print("action ",action)
-            #print("reward ", reward)
             fitness += reward
         #env.close()
-        #print("fitness ", fitness)
         fitnesses.append(fitness)
 
     return np.mean(fitnesses)
@@ -62,12 +57,10 @@ def run():
     inputs = 4
     outputs = 1
     hidden_layers = 6
-    population = 400
+    population = 100
     
     brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
     brain.generate()
-    print(hyperparams.max_fitness)
-
     
     print("Training...")
     while brain.should_evolve():
@@ -75,13 +68,13 @@ def run():
 
         # Print training progress
         current_gen = brain.get_generation()
-        brain.update_fittest()
-        current_best = brain.get_all_time_fittest()
-        print("Current Accuracy: {0} | Current species: {1} | Current genome: {2} | Current gen: {3}".format(
+        current_best = brain.get_fittest()
+        true_pop_size = brain.get_population()
+        print("Current best genome: {0} | Current best fitness: {1} | Current generation: {2}| Current pop size: {3}".format(
+            current_best,
             current_best.get_fitness(), 
-            brain.get_current_species()+1, 
-            brain.get_current_genome()+1,
-            current_gen
+            current_gen,
+            true_pop_size
         ))
 
     with open('best_genome', 'wb') as f:

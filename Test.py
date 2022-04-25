@@ -1,9 +1,3 @@
-from connection import Connection
-from connection_history import ConnectionHistory
-
-from genome import *
-from species import *
-from hyperparameters import *
 
 import random
 import time
@@ -11,9 +5,17 @@ import time
 import pygame
 from pygame.locals import *
 
+import sys
+
+sys.path.append('./neato')
+from neato.genome import *
+from neato.species import *
+from neato.hyperparameters import *
+from neato.connection_history import *
+
 # Constants
 WIDTH, HEIGHT = 640, 680
-NETWORK_WIDTH = 580
+NETWORK_WIDTH = 380
 
 DRAW_NETWORK = True
 

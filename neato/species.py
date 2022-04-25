@@ -114,7 +114,7 @@ class Species(object):
         if len(self._fitness_history) > self._max_fitness_history:
             self._fitness_history.pop(0)
 
-    def cull_genomes(self, fittest_only: bool) -> None:
+    def cull_genomes(self, fittest_only: bool, survival_percentage: int) -> None:
         """Rank genome in species and eliminate the least fit individuals"""
         self._members.sort(key=lambda g: g._fitness, reverse=True)
         if fittest_only:
@@ -122,7 +122,7 @@ class Species(object):
             remaining = 1
         else:
             # Keep top 25%
-            remaining = int(math.ceil(0.25*len(self._members)))
+            remaining = int(math.ceil(survival_percentage*len(self._members)))
 
         self._members = self._members[:remaining]
 

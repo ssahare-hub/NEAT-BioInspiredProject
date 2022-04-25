@@ -143,7 +143,7 @@ class Brain(object):
             # print('Culling low performing genomes')
             # Eliminate lowest performing genomes per Species
             for s in self._species:
-                s.cull_genomes(False)
+                s.cull_genomes(False,self._hyperparams.survival_percentage)
 
             # print('Repopulating')
             # Repopulate

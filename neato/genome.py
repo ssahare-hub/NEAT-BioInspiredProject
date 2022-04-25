@@ -276,7 +276,6 @@ class Genome(object):
                     self.add_node()
                 else:
                     j = random.choice(j_list)
-
                 if i != self._connections[innovation].in_node.number and j !=self._connections[innovation].out_node.number:
                     return(i,j)
 

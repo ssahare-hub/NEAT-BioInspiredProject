@@ -1,16 +1,31 @@
 import os
 import pickle
 import math
+from collections import defaultdict
 import numpy as np
 import gym
 import os
 import sys
 import matplotlib.pyplot as plt
 sys.path.append('./neato')
+from neato.genome import Genome
 from neato.brain import Brain
 from neato.hyperparameters import Hyperparameters, tanh
 
 EPISODE_DURATION = 500
+ 
+# Constants
+WIDTH, HEIGHT = 640, 480
+NETWORK_WIDTH = 480
+
+# Flags
+AI = True
+DRAW_NETWORK = True
+
+# Colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+YELLOW = (255, 255, 0)
 
 def evaluate(genome):
     """Evaluates the current genome."""
@@ -36,22 +51,83 @@ def evaluate(genome):
         fitnesses.append(fitness)
     return np.mean(fitnesses)
 
+def generate_visualized_network(genome: Genome, generation):
+    """Generate the positions/colors of the neural network nodes"""
+    nodes = {}
+    fig = plt.figure(figsize=(12, 12))
+    ax = fig.gca()
+    ax.axis('off')
+    plt.title(f'Best Genome with fitness {genome.get_fitness()} Network')
+    _nodes = genome.get_nodes()
+    layer_count = defaultdict(lambda: -1 * genome._inputs)
+    index = {}
+    for n in _nodes:
+        layer_count[_nodes[n].layer] += 1
+        index[n] = layer_count[_nodes[n].layer]
+    for number in _nodes:
+        if genome.is_input(number):
+            color = 'blue'
+            x = 0.05*NETWORK_WIDTH
+            y = HEIGHT/4 + HEIGHT/5 * number
+        elif genome.is_output(number):
+            color = 'red'
+            x = NETWORK_WIDTH-0.05*NETWORK_WIDTH
+            y = HEIGHT/2
+        else:
+            color = 'black'
+            x = NETWORK_WIDTH/10 + NETWORK_WIDTH/12 * _nodes[number].layer
+            y = HEIGHT/2 + HEIGHT / \
+                (layer_count[_nodes[number].layer]+2) * index[number]
+        nodes[number] = [(x, y), color]
+
+    print(len(_nodes))
+    genes = genome.get_connections()
+    sorted_innovations = sorted(genes.keys())
+    for innovation in sorted_innovations:
+        connection = genes[innovation]
+        i, j = connection.in_node.number, connection.out_node.number
+        if connection.enabled:
+            color = 'green'
+        else:
+            color = 'red'
+        x_values = [nodes[i][0][0], nodes[j][0][0]]
+        y_values = [nodes[i][0][1], nodes[j][0][1]]
+        ax.plot(x_values, y_values, color=color)
+
+    for n in nodes:
+        circle = plt.Circle(nodes[n][0], 5, color=nodes[n][1])
+        ax.add_artist(circle)
+        # t = txt.Text(nodes[n][0][0] + 10, nodes[n][0][1], str(genome._nodes[n].layer))
+        # ax.add_artist(t)
+        # t = txt.Text(nodes[n][0][0] - 10, nodes[n][0][1] + 10, str(n), color='red')
+        # ax.add_artist(t)
+    if not os.path.exists('mountaincar_graphs'):
+        os.makedirs('mountaincar_graphs')
+    plt.savefig(f'mountaincar_graphs/{generation}._network.png')
+    # plt.show()
+
 def run():
 
     hyperparams = Hyperparameters()
     hyperparams.default_activation = tanh
-    hyperparams.delta_threshold = 0.75
-    hyperparams.mutation_probabilities['node'] = 0.05
-    hyperparams.mutation_probabilities['connection'] = 0.05
-    hyperparams.mutation_probabilities['mutate'] = 0.25
-    hyperparams.fitness_offset = 10
-    hyperparams.max_fitness = hyperparams.fitness_offset
+    hyperparams.delta_threshold = 2
+    hyperparams.mutation_probabilities['node'] = 0.2
+    hyperparams.mutation_probabilities['connection'] = 0.2
+    hyperparams.mutation_probabilities['mutate'] = 0.75
+    hyperparams.mutation_probabilities['weight_perturb'] = 0.8
+    hyperparams.mutation_probabilities['weight_set'] = 0.01
+    hyperparams.mutation_probabilities['bias_perturb'] = 0.8
+    hyperparams.mutation_probabilities['bias_set'] = 0.01
+    hyperparams.mutation_probabilities['re-enable'] = 0.01
+    hyperparams.fitness_offset = 0
+    hyperparams.max_fitness = hyperparams.fitness_offset+0.7029
     hyperparams.max_generations = 300
+    hyperparams.distance_weights['matching_connections'] = 0.75
 
     inputs = 2
     outputs = 1
     hidden_layers = 6
-    population = 400
+    population = 1000
     if os.path.isfile('mountaincar.neat'):
         brain = Brain.load('mountaincar')
         brain._hyperparams = hyperparams
@@ -63,34 +139,46 @@ def run():
     current_best = None
     print("Training...")
     fitness_history = []
-    while brain.get_generation() < hyperparams.max_generations:
+    while brain.should_evolve():
         brain.evaluate_parallel(evaluate)
 
         # Print training progress
         current_gen = brain.get_generation()
         brain.update_fittest()
-        current_best = brain.get_all_time_fittest()
+        current_best = brain.get_current_fittest()
         mean_fitness = brain.get_average_fitness()
         brain.save_fitness_history()
+        brain.save_max_fitness_history()
         print(
-            "Mean Fitness: {4} | Current Accuracy: {0} | Current species: {1} | Current genome: {2} | Current gen: {3}".format(
+            "Mean Fitness: {} | Current Accuracy: {} | Species Count: {} | Population count: {} | Current gen: {}".format(
+                mean_fitness,
                 current_best.get_fitness(), 
-                brain.get_current_species()+1, 
-                brain.get_current_genome()+1,
-                current_gen, 
-                mean_fitness
+                brain.get_species_count(), 
+                brain.get_population(),
+                current_gen
             )
         )
         sys.stdout.flush()
         print('saving current population')
         brain.save('mountaincar')
+        generate_visualized_network(current_best, current_gen)
+        # NOTE: I wanted to see intermediate results
+        # so saving genome whenever it beats the last best
+        if current_best.get_fitness() >= brain._global_best.get_fitness():
+            with open(f'mountaincar_best_individual_gen{current_gen}', 'wb') as f:
+                pickle.dump(current_best, f)
+        brain.update_fittest()
+        # break
+        plt.figure()
+        plt.title('fitness over generations')
+        plt.plot(brain.get_fitness_history(),label='average')
+        plt.plot(brain.get_max_fitness_history(), label='max')
+        plt.savefig(f'mountaincar_graphs/progress.png')
+
     print('done')
     with open('mountaincar_best_individual', 'wb') as f:
-        pickle.dump(current_best, f)
+        pickle.dump(brain.get_all_time_fittest(), f)
     
-    plt.title('fitness over generations')
-    plt.plot(brain.get_fitness_history())
-    plt.show()
 
 if __name__ == '__main__':
     run()

@@ -51,8 +51,8 @@ def run():
     hyperparams.mutation_probabilities['node'] = 0.05
     hyperparams.mutation_probabilities['connection'] = 0.05
     hyperparams.mutation_probabilities['mutate'] = 0.05
-    #hyperparams.fitness_offset = 100 #*EPISODE_DURATION
-    #hyperparams.max_fitness = hyperparams.fitness_offset
+    hyperparams.fitness_offset = 500
+    hyperparams.max_fitness = hyperparams.fitness_offset + 300
 
     inputs = 24
     outputs = 4
@@ -74,7 +74,8 @@ def run():
 
         # Print training progress
         current_gen = brain.get_generation()
-        
+        brain.save_fitness_history()
+        brain.save_max_fitness_history()
         current_best = brain.get_current_fittest()
         mean_fitness = brain.get_average_fitness()
         print(
@@ -99,9 +100,11 @@ def run():
     with open('bipedal_best_individual', 'wb') as f:
         pickle.dump(brain.get_all_time_fittest, f)
 
+    plt.figure()
     plt.title('fitness over generations')
-    plt.plot(brain.get_fitness_history())
-    plt.show()
+    plt.plot(brain.get_fitness_history(),label='average')
+    plt.plot(brain.get_max_fitness_history(), label='max')
+    # plt.savefig(f'Bipedal_graph/progress.png')
 
 if __name__ == '__main__':
     run()

@@ -9,3 +9,6 @@ class Node(object):
         self.number = n
         self.layer = l
         self.inConnections: List[Connection] = []
+    
+    def __repr__(self):
+        return str(self.number)

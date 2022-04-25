@@ -28,6 +28,7 @@ def evaluate(genome):
     fitnesses = []
     for i in range(runs_per_net):
         env = gym.make("CartPole-v1")
+        env._max_episode_steps = 750
         observation = env.reset()
 
         fitness = 0.
@@ -50,7 +51,8 @@ def run():
     #hyperparams.max_generations = 300
     hyperparams.delta_threshold = 0.75
     hyperparams.mutation_probabilities['node'] = 0.05
-    hyperparams.mutation_probabilities['edge'] = 0.05
+    hyperparams.mutation_probabilities['connection'] = 0.05
+    hyperparams.max_fitness = 749
 
     inputs = 4
     outputs = 1
@@ -75,6 +77,8 @@ def run():
             true_pop_size
         ))
 
+    with open('best_genome', 'wb') as f:
+        pickle.dump(current_best, f)
 
 if __name__ == '__main__':
     run()

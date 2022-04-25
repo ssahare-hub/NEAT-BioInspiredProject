@@ -14,3 +14,6 @@ class Connection(object):
     def showConn(self):
         print("Connection innovation #", self.innovation, "Between", self.in_node.number,"->", self.out_node.number, "weight:", self.weight, "status:", self.enabled)
         print("{:>10s} {:>14d} -> {:>14d}".format("Layers:",self.in_node.layer,self.out_node.layer))
+
+    def __repr__(self):
+        return(f"{self.in_node.number} -> {self.out_node.number}")

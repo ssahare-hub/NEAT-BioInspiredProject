@@ -6,8 +6,8 @@ from .node import *
 
 
 def genomic_crossover(a: Node, b: Node) -> Node:
-    """Breed two genomes and return the child. Matching genes
-    are inherited randomly, while disjoint genes are inherited
+    """Crossover between to selected individuals and return their child. 
+    Matching genes are inherited randomly, while disjoint genes are inherited
     from the fitter parent.
     """
     # Template genome for child
@@ -61,7 +61,6 @@ def genomic_crossover(a: Node, b: Node) -> Node:
         if n in b._nodes:
             inherit_from.append(b)
 
-        # random.shuffle(inherit_from)
         parent = max(inherit_from, key=lambda p: p._fitness)
         child._nodes[n] = copy.deepcopy(parent._nodes[n])
 
@@ -71,8 +70,8 @@ def genomic_crossover(a: Node, b: Node) -> Node:
 
 
 class Species(object):
-    """A Species represents a set of genomes whose genomic distances 
-    between them fall under the Brain's delta threshold.
+    """A species represents individuals within the same niche 
+    which is determined by the genomic distance being below δ_threshold
     """
 
     def __init__(self, max_fitness_history: int, *members):
@@ -82,8 +81,8 @@ class Species(object):
         self._max_fitness_history = max_fitness_history
 
     def breed(self, mutation_probabilities: dict, breed_probabilities: dict) -> Node:
-        """Return a child as a result of either a mutated clone
-        or crossover between two parent genomes.
+        """Genrate and return offspring (child) either through cloning or crossover 
+        followed by mutation.
         """
         # Either mutate a clone or breed two random genomes
         population = list(breed_probabilities.keys())
@@ -92,17 +91,20 @@ class Species(object):
 
         if choice == "asexual" or len(self._members) == 1:
             child = random.choice(self._members).clone()
-            child.mutate(mutation_probabilities)
+            # child.mutate(mutation_probabilities)
         elif choice == "sexual":
             (mom, dad) = random.sample(self._members, 2)
             child = genomic_crossover(mom, dad)
 
+        if random.random() <= mutation_probabilities['mutate']:
+            child.mutate(mutation_probabilities)
         # NOTE: do we add mutation after sexual crossover?
         # child.mutate(mutation_probabilities)
         return child
 
     def update_fitness(self) -> None:
-        """Update the adjusted fitness values of each genome 
+        """Update the adjusted fitness values of each genome
+        by dividing over the number of individuals in the respective niche 
         and the historical fitness."""
         for g in self._members:
             g._adjusted_fitness = g._fitness/len(self._members)
@@ -112,15 +114,15 @@ class Species(object):
         if len(self._fitness_history) > self._max_fitness_history:
             self._fitness_history.pop(0)
 
-    def cull_genomes(self, fittest_only: bool) -> None:
-        """Exterminate the weakest genomes per Species."""
+    def cull_genomes(self, fittest_only: bool, survival_percentage: int) -> None:
+        """Rank genome in species and eliminate the least fit individuals"""
         self._members.sort(key=lambda g: g._fitness, reverse=True)
         if fittest_only:
             # Only keep the winning genome
             remaining = 1
         else:
             # Keep top 25%
-            remaining = int(math.ceil(0.25*len(self._members)))
+            remaining = int(math.ceil(survival_percentage*len(self._members)))
 
         self._members = self._members[:remaining]
 

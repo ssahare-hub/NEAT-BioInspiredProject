@@ -4,6 +4,7 @@ from .genome import *
 from .hyperparameters import *
 from .connection_history import *
 from .species import *
+from tqdm import tqdm
 
 
 def genomic_distance(a: Node, b: Node, distance_weights: dict):
@@ -32,7 +33,7 @@ def genomic_distance(a: Node, b: Node, distance_weights: dict):
         len(matching_connections)/num_max_connections
     t3 = distance_weights['weight'] * weight_diff/len(matching_connections)
     t4 = distance_weights['bias'] * bias_diff/num_min_nodes
-    return t1 + t3 + t4  # + t2
+    return t1 + t3 + t2 #t4  # + 
 
 
 class Brain(object):
@@ -47,7 +48,7 @@ class Brain(object):
         self._connection_history = ConnectionHistory(
             inputs, outputs, hidden_layers)
 
-        self._species = []
+        self._species: List[Species] = []
         self._population = population
 
         # Hyper-parameters
@@ -56,8 +57,10 @@ class Brain(object):
         self._generation = 0
         self._current_species = 0
         self._current_genome = 0
-
+        self._past_fitnesses = []
         self._global_best = None
+        self._past_max_fitnesses = []
+        self._current_fittest: Genome = None
 
     def generate(self):
         """Generate the initial population of genomes."""
@@ -66,7 +69,7 @@ class Brain(object):
                        self._hyperparams.default_activation)
             g.createNetwork()
             self.classify_genome(g)
-        print("generating genome for population")
+        # print("generating genome for population")
 
         # Set the initial best genome
         self._global_best = self._species[0]._members[0]
@@ -106,33 +109,50 @@ class Brain(object):
         if current_top._fitness > self._global_best._fitness:
             self._global_best = current_top.clone()
 
+    def find_current_fittest(self):
+        """Update the highest fitness score of the whole population."""
+        top_performers = [s.get_best() for s in self._species]
+        current_top = max(top_performers, key=lambda g: g._fitness)
+        return current_top.clone()
+
+    def get_current_fittest(self):
+        return self._current_fittest
+    
     def evolve(self):
         """Evolve the population by eliminating the poorest performing
         genomes and repopulating with mutated children, prioritizing
         the most promising species.
         """
         global_fitness_sum = 0
+        # print('updating fitness fo species')
         for s in self._species:
             s.update_fitness()
             global_fitness_sum += s._fitness_sum
 
+        # update the fittest genome of the generation
+        self._current_fittest = self.find_current_fittest()
+        
         if global_fitness_sum == 0:
+            # print('No progress, mutating every genome')
             # No progress, mutate everybody
             for s in self._species:
                 for g in s._members:
                     g.mutate(self._hyperparams.mutation_probabilities)
         else:
             # Only keep the species with potential to improve
+            # print('Collecting species with potential to improve')
             surviving_species = []
             for s in self._species:
                 if s.can_progress():
                     surviving_species.append(s)
             self._species = surviving_species
 
+            # print('Culling low performing genomes')
             # Eliminate lowest performing genomes per Species
             for s in self._species:
-                s.cull_genomes(False)
+                s.cull_genomes(False,self._hyperparams.survival_percentage)
 
+            # print('Repopulating')
             # Repopulate
             for i, s in enumerate(self._species):
                 ratio = s._fitness_sum/global_fitness_sum
@@ -149,13 +169,14 @@ class Brain(object):
             # No species survived
             # Repopulate using mutated minimal structures and global best
             if not self._species:
+                # print('No species survived, repopulating')
                 for i in range(self._population):
                     if i % 3 == 0:
                         g = self._global_best.clone()
                     else:
-                        g = Genome(self._inputs, self._outputs,
-                                   self._hyperparams.default_activation)
-                        g.generate()
+                        g = Genome(self._connection_history,
+                                   self._hyperparams.default_activation, 
+                                   True)
                     g.mutate(self._hyperparams.mutation_probabilities)
                     self.classify_genome(g)
 
@@ -167,6 +188,7 @@ class Brain(object):
         """
         self.update_fittest()
         fit = self._global_best._fitness <= self._hyperparams.max_fitness
+        # print(self._global_best._fitness,self._hyperparams.max_fitness)
         end = self._generation != self._hyperparams.max_generations
 
         return fit and end
@@ -199,6 +221,7 @@ class Brain(object):
         max_proc = max(mp.cpu_count()-1, 1)
         pool = mp.Pool(processes=max_proc)
 
+        # print(f'generating jobs for generation', self._generation)
         results = {}
         for i in range(len(self._species)):
             for j in range(len(self._species[i]._members)):
@@ -208,15 +231,19 @@ class Brain(object):
                     kwds=kwargs
                 )
 
-        for key in results:
+        # print('updating fitness')
+        for key in tqdm(results):
+            # print(results[key].get())
             genome = self._species[key[0]]._members[key[1]]
-            genome.set_fitness(results[key].get())
+            # print("New fitness",results[key].get()+self._hyperparams.fitness_offset)
+            genome.set_fitness(results[key].get()+self._hyperparams.fitness_offset)
 
         pool.close()
         pool.join()
+        # print('Evolving')
         self.evolve()
 
-    def get_fittest(self):
+    def get_all_time_fittest(self):
         """Return the genome with the highest global fitness score."""
         return self._global_best
 
@@ -244,11 +271,47 @@ class Brain(object):
     def get_species(self):
         """Get the list of species and their respective member genomes."""
         return self._species
+    
+    def get_average_fitness(self):
+        """Get the average fitness of the population."""
+        fitnesses = []
+        for s in self._species:
+            for genome in s._members:
+                if genome.get_fitness() != 0:
+                    fitnesses.append(genome.get_fitness())
+        if not fitnesses:
+            return 0
+        return np.mean(fitnesses)
+
+    def get_maximum_fitness(self):
+        """Get the average fitness of the population."""
+        fitnesses = []
+        for s in self._species:
+            for genome in s._members:
+                fitnesses.append(genome.get_fitness())
+        return np.max(fitnesses)
 
     def save(self, filename: str):
         """Save an instance of the population to disk."""
         with open(filename+'.neat', 'wb') as _out:
             pickle.dump(self, _out, pickle.HIGHEST_PROTOCOL)
+    
+    def save_fitness_history(self):
+        self._past_fitnesses.append(self.get_average_fitness())
+    
+    def get_fitness_history(self):
+        return self._past_fitnesses
+    
+    def save_max_fitness_history(self):
+        self._past_max_fitnesses.append(self.get_maximum_fitness())
+    
+    def get_max_fitness_history(self):
+        return self._past_max_fitnesses
+    
+    def get_species_count(self):
+        return len(self._species)
+    
+    # def 
 
     @staticmethod
     def load(filename):

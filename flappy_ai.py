@@ -157,7 +157,7 @@ def main():
         hyperparams.delta_threshold = 0.75
 
         hyperparams.mutation_probabilities['node'] = 0.05
-        hyperparams.mutation_probabilities['edge'] = 0.05
+        hyperparams.mutation_probabilities['connection'] = 0.05
 
         brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
         brain.generate()
@@ -241,7 +241,7 @@ def main():
                                             brain.get_current_species()+1, 
                                             brain.get_current_genome()+1,
                                             timer,
-                                            brain.get_fittest().get_fitness(),
+                                            brain.get_all_time_fittest().get_fitness(),
                                             round(output, 3),
                                             [round(i, 3) for i in inputs]
         ))

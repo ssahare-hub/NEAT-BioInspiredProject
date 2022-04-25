@@ -32,20 +32,24 @@ class Hyperparameters(object):
         }
         self.default_activation = sigmoid
 
-        self.max_fitness = float('inf')
+        self.max_fitness = float(500)
         self.max_generations = float('inf')
         self.max_fitness_history = 30
+        self.fitness_offset = 0
+
+        self.survival_percentage = 0.25
 
         self.breed_probabilities = {
             'asexual': 0.5,
             'sexual': 0.5
         }
         self.mutation_probabilities = {
+            'mutate': 0.05,
             'node': 0.05,
-            'edge': 0.05,
+            'connection': 0.05,
             'weight_perturb': 0.04,
             'weight_set': 0.01,
             'bias_perturb': 0.03,
             'bias_set': 0.01,
-            're-enable': 0.0005
+            're-enable': 0.009
         }

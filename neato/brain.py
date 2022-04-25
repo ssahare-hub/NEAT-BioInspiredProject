@@ -51,6 +51,8 @@ class Brain(object):
 
         self._species: List[Species] = []
         self._population = population
+        self._network_history = []
+        self._population_history = []      
 
         # Hyper-parameters
         self._hyperparams = hyperparams
@@ -170,9 +172,11 @@ class Brain(object):
             # No species survived
             # Repopulate using mutated minimal structures and global best
             if not self._species:
-                # print('No species survived, repopulating')
+                print('='*100)
+                print('No species survived, repopulating!!')
+                print('='*100)
                 for i in range(self._population):
-                    if i % 3 == 0:
+                    if i % 3 != 0:
                         g = self._global_best.clone()
                     else:
                         g = Genome(self._connection_history,
@@ -219,7 +223,7 @@ class Brain(object):
         Any global state passed to the evaluator is copied and will not
         be modified at the parent process.
         """
-        max_proc = max(mp.cpu_count()-1, 1)
+        max_proc = max(mp.cpu_count(), 1)
         pool = mp.Pool(processes=max_proc)
 
         # print(f'generating jobs for generation', self._generation)
@@ -311,6 +315,18 @@ class Brain(object):
     
     def get_species_count(self):
         return len(self._species)
+    
+    def save_network_history(self, network_size):
+        self._network_history.append(network_size)
+    
+    def get_network_history(self):
+        return self._network_history
+    
+    def save_population_history(self):
+        self._population_history.append(self.get_population())
+    
+    def get_population_history(self):
+        return self._population_history
     
     # def 
 

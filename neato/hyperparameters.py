@@ -37,7 +37,7 @@ class Hyperparameters(object):
         self.max_fitness_history = 30
         self.fitness_offset = 0
 
-        self.survival_percentage = 0.25
+        self.survival_percentage = 0.45
 
         self.breed_probabilities = {
             'asexual': 0.5,

@@ -18,7 +18,6 @@ DRAW_NETWORK = True
 
 # %%
 
-
 def generate_visualized_network(genome: Genome, generation):
     """Generate the positions/colors of the neural network nodes"""
     nodes = {}
@@ -27,11 +26,15 @@ def generate_visualized_network(genome: Genome, generation):
     ax.axis('off')
     plt.title(f'Best Genome with fitness {genome.get_fitness()} Network')
     _nodes = genome.get_nodes()
-    layer_count = defaultdict(lambda: -1 * genome._inputs)
+    layer_count = defaultdict(lambda: -1 * genome._inputs )
     index = {}
+    max_nodes_per_layer = genome._inputs
     for n in _nodes:
         layer_count[_nodes[n].layer] += 1
+        if layer_count[_nodes[n].layer] == 0:
+            layer_count[_nodes[n].layer] += 1
         index[n] = layer_count[_nodes[n].layer]
+        max_nodes_per_layer = max( max_nodes_per_layer, layer_count[_nodes[n].layer] + genome._inputs )
     for number in _nodes:
         if genome.is_input(number):
             color = 'blue'
@@ -44,11 +47,10 @@ def generate_visualized_network(genome: Genome, generation):
         else:
             color = 'black'
             x = NETWORK_WIDTH/10 + NETWORK_WIDTH/12 * _nodes[number].layer
-            y = HEIGHT/2 + HEIGHT / \
-                (layer_count[_nodes[number].layer]+2) * index[number]
+            t = max( (layer_count[_nodes[number].layer]) * 2.5, max_nodes_per_layer)
+            y = HEIGHT/4 + (HEIGHT / t) * index[number]
         nodes[number] = [(x, y), color]
 
-    print(len(_nodes))
     genes = genome.get_connections()
     sorted_innovations = sorted(genes.keys())
     for innovation in sorted_innovations:
@@ -65,14 +67,15 @@ def generate_visualized_network(genome: Genome, generation):
     for n in nodes:
         circle = plt.Circle(nodes[n][0], 5, color=nodes[n][1])
         ax.add_artist(circle)
-        # t = txt.Text(nodes[n][0][0] + 10, nodes[n][0][1], str(genome._nodes[n].layer))
+        # t = txt.Text(nodes[n][0][0] + 10, nodes[n][0][1], str(index[n]))
         # ax.add_artist(t)
-        # t = txt.Text(nodes[n][0][0] - 10, nodes[n][0][1] + 10, str(n), color='red')
+        # t = txt.Text(nodes[n][0][0] - 10, nodes[n][0][1] - 10, str(genome._nodes[n].layer), color='red')
         # ax.add_artist(t)
     if not os.path.exists('pendulum_graphs'):
         os.makedirs('pendulum_graphs')
-    plt.savefig(f'pendulum_graphs/{generation}._network.png')
-    # plt.show()
+    plt.show()
+    # plt.savefig(f'pendulum_graphs/{generation}._network.png')
+    # plt.clf()
 
 
 with open('mountaincar_best_individual', 'rb') as f:

@@ -7,6 +7,7 @@
 
 # To use render environment need to use only one cpu in brain and uncomment render part
 #  or it will become frozen. (Probably way to fix this....)
+from collections import defaultdict
 import os
 import pickle
 import random
@@ -37,7 +38,7 @@ DRAW_NETWORK = True
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
-
+SEED = 1
 
 def evaluate(genome:Genome):
     """Evaluates the current genome."""
@@ -45,6 +46,7 @@ def evaluate(genome:Genome):
     for i in range(5):
         env = gym.make("Pendulum-v1")
         env._max_episode_steps = EPISODE_DURATION
+        env.seed(SEED)
         last_observation = env.reset()
 
         fitness = 0.
@@ -55,7 +57,7 @@ def evaluate(genome:Genome):
             action = genome.forward(last_observation)[0]
 
             next_observation, reward, done, info = env.step([action*2])
-            # reward = 25* np.exp(-1*(next_observation[0]-1)*(next_observation[0]-1)/0.001)-100*np.abs(10*0.5 - (10*0.5*next_observation[0] + 0.5*0.3333*next_observation[2] * next_observation[2])) + 100*np.abs(10*0.5 - (10*0.5*last_observation[0] + 0.5*0.3333*last_observation[2] * last_observation[2]))
+            reward = 25* np.exp(-1*(next_observation[0]-1)*(next_observation[0]-1)/0.001)-100*np.abs(10*0.5 - (10*0.5*next_observation[0] + 0.5*0.3333*next_observation[2] * next_observation[2])) + 100*np.abs(10*0.5 - (10*0.5*last_observation[0] + 0.5*0.3333*last_observation[2] * last_observation[2]))
             fitness += reward
             last_observation = next_observation
         fitnesses.append(fitness)
@@ -73,9 +75,13 @@ def generate_visualized_network(genome: Genome, generation):
     _nodes = genome.get_nodes()
     layer_count = defaultdict(lambda: -1 * genome._inputs)
     index = {}
+    max_nodes_per_layer = genome._inputs
     for n in _nodes:
         layer_count[_nodes[n].layer] += 1
+        if layer_count[_nodes[n].layer] == 0:
+            layer_count[_nodes[n].layer] += 1
         index[n] = layer_count[_nodes[n].layer]
+        max_nodes_per_layer = max( max_nodes_per_layer, layer_count[_nodes[n].layer] + genome._inputs )
     for number in _nodes:
         if genome.is_input(number):
             color = 'blue'
@@ -88,11 +94,10 @@ def generate_visualized_network(genome: Genome, generation):
         else:
             color = 'black'
             x = NETWORK_WIDTH/10 + NETWORK_WIDTH/12 * _nodes[number].layer
-            y = HEIGHT/2 + HEIGHT / \
-                (layer_count[_nodes[number].layer]+2) * index[number]
+            t = max( (layer_count[_nodes[number].layer]) * 2.5, max_nodes_per_layer)
+            y = HEIGHT/2 + (HEIGHT / t) * index[number]
         nodes[number] = [(x, y), color]
 
-    print(len(_nodes))
     genes = genome.get_connections()
     sorted_innovations = sorted(genes.keys())
     for innovation in sorted_innovations:
@@ -109,14 +114,10 @@ def generate_visualized_network(genome: Genome, generation):
     for n in nodes:
         circle = plt.Circle(nodes[n][0], 5, color=nodes[n][1])
         ax.add_artist(circle)
-        # t = txt.Text(nodes[n][0][0] + 10, nodes[n][0][1], str(genome._nodes[n].layer))
-        # ax.add_artist(t)
-        # t = txt.Text(nodes[n][0][0] - 10, nodes[n][0][1] + 10, str(n), color='red')
-        # ax.add_artist(t)
     if not os.path.exists('pendulum_graphs'):
         os.makedirs('pendulum_graphs')
     plt.savefig(f'pendulum_graphs/{generation}._network.png')
-    # plt.show()
+    plt.close()
 
 
 def run():
@@ -125,27 +126,30 @@ def run():
     #hyperparams.max_generations = 300
     hyperparams.default_activation = tanh
     hyperparams.delta_threshold = 0.75
-    hyperparams.mutation_probabilities['node'] = 0.25
-    hyperparams.mutation_probabilities['connection'] = 0.25
-    hyperparams.mutation_probabilities['mutate'] = 0.25
+    hyperparams.mutation_probabilities['node'] = 0.05
+    hyperparams.mutation_probabilities['connection'] = 0.05
+    hyperparams.mutation_probabilities['weight_perturb'] = 0.1
+    hyperparams.mutation_probabilities['mutate'] = 0.75
     hyperparams.fitness_offset = 0 * EPISODE_DURATION
     hyperparams.max_fitness = hyperparams.fitness_offset
-    hyperparams.max_generations = 1200
+    hyperparams.max_generations = 300
 
     inputs = 3
     outputs = 1
     hidden_layers = 9
-    population = 500
+    population = 200
     if os.path.isfile('pendulum.neat'):
         brain = Brain.load('pendulum')
         brain._hyperparams = hyperparams
-    else:    
+    else:
         brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
         brain.generate()
         print(hyperparams.max_fitness)
 
     
     current_best = None
+    network_size_history = []
+    population_history = []
     print("Training...")
     while brain.get_generation() < hyperparams.max_generations:
         brain.evaluate_parallel(evaluate)
@@ -156,6 +160,8 @@ def run():
         brain.save_max_fitness_history()
         current_best = brain.get_current_fittest()
         mean_fitness = brain.get_average_fitness()
+        brain.save_network_history(len(current_best.get_connections()))
+        brain.save_population_history()
         print(
             "Mean Fitness: {} | Best Gen Fitness: {} | Species Count: {} |  Current gen: {}".format(
                 mean_fitness,
@@ -167,7 +173,12 @@ def run():
         sys.stdout.flush()
         print('saving current population')
         brain.save('pendulum')
-        generate_visualized_network(current_best, current_gen)
+        try:
+            generate_visualized_network(current_best, current_gen)
+        except Exception as e:
+            print('Network', '='*40)
+            print(e)
+            print('='*100)
         # NOTE: I wanted to see intermediate results
         # so saving genome whenever it beats the last best
         if current_best.get_fitness() > brain._global_best.get_fitness():
@@ -175,11 +186,28 @@ def run():
                 pickle.dump(current_best, f)
         brain.update_fittest()
         # break
-        plt.figure()
-        plt.title('fitness over generations')
-        plt.plot(brain.get_fitness_history(),label='average')
-        plt.plot(brain.get_max_fitness_history(), label='max')
-        plt.savefig(f'pendulum_graphs/progress.png')
+        try:
+            plt.figure()
+            plt.title('fitness over generations')
+            plt.plot(brain.get_fitness_history(),label='average')
+            plt.plot(brain.get_max_fitness_history(), label='max')
+            plt.legend()
+            plt.savefig(f'pendulum_graphs/progress.png')
+            plt.close()
+            plt.figure()
+            plt.plot(brain.get_network_history(), label='network size')
+            plt.legend()
+            plt.savefig(f'pendulum_graphs/network_progress.png')
+            plt.close()
+            plt.figure()
+            plt.plot(brain.get_population_history(), label='population size')
+            plt.legend()
+            plt.savefig(f'pendulum_graphs/population_progress.png')
+            plt.close()
+        except Exception as e:
+            print('progress plots', '='*40)
+            print(e)
+            print('='*100)
 
     with open('pendulum_best_individual', 'wb') as f:
         pickle.dump(brain._global_best, f)

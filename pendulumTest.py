@@ -1,19 +1,14 @@
 import pickle
 
-import numpy as np
 #import cart_pole
 import gym
-import math
-import os
 import sys
 
 sys.path.append('./neato')
-from neato.brain import Brain
-from neato.hyperparameters import Hyperparameters
 
 EPISODE_DURATION = 750
 def run():
-    with open('pendulum_best_individual', 'rb') as f:
+    with open('pendulum_best_individual_gen61', 'rb') as f:
         genome = pickle.load(f)
 
     print('Loaded genome:')

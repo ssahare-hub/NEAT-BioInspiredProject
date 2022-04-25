@@ -139,10 +139,10 @@ mountaincar_best_individual
 /pendulum_graphs
 mountaincar
 bipedal
-<<<<<<< Updated upstream
 /cartpole_graphs
 /cartpole_best_individual
+500_pendu/
 cartpole
-=======
 *.png
->>>>>>> Stashed changes
+
+# *_best_individual_*

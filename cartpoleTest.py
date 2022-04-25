@@ -13,7 +13,7 @@ from neato.hyperparameters import Hyperparameters
 
 
 def run():
-    with open('best_genome', 'rb') as f:
+    with open('cartpole_best_individual_gen8', 'rb') as f:
         genome = pickle.load(f)
 
     print('Loaded genome:')

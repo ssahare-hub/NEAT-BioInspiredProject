@@ -12,6 +12,7 @@ import pickle
 import random
 import numpy as np
 #import cart_pole
+from collections import defaultdict
 import gym
 import os
 import sys

@@ -139,3 +139,6 @@ mountaincar_best_individual
 /pendulum_graphs
 mountaincar
 bipedal
+/cartpole_graphs
+/cartpole_best_individual
+cartpole

@@ -35,29 +35,29 @@ def evaluate(genome):
             #print(action)
             observation, reward, done, info = env.step(action)
             fitness += reward
+            #print(reward)
         #env.close()
         #print("fitness ", fitness)
-        fitnesses.append(fitness)
+        fitnesses.append(fitness+100)
     sys.stdout.flush()
     return np.mean(fitnesses)
 
 def run():
 
     hyperparams = Hyperparameters()
-    #hyperparams.max_generations = 300
+    hyperparams.max_generations = 50
     hyperparams.default_activation = tanh
     hyperparams.delta_threshold = 1.5
     hyperparams.mutation_probabilities['node'] = 0.05
     hyperparams.mutation_probabilities['connection'] = 0.05
-    hyperparams.mutation_probabilities['mutate'] = 0.75
-    hyperparams.fitness_offset = 100 #*EPISODE_DURATION
+    hyperparams.mutation_probabilities['mutate'] = 0.05
+    #hyperparams.fitness_offset = 100 #*EPISODE_DURATION
     #hyperparams.max_fitness = hyperparams.fitness_offset
-    #hyperparams.max_generations = 30
 
     inputs = 24
     outputs = 4
-    hidden_layers = 2
-    population = 20
+    hidden_layers = 6
+    population = 200
     
     if os.path.isfile('bipedal.neat'):
         brain = Brain.load('bipedal')

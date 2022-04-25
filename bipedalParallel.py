@@ -74,25 +74,30 @@ def run():
 
         # Print training progress
         current_gen = brain.get_generation()
-        brain.update_fittest()
-        current_best = brain.get_all_time_fittest()
+        
+        current_best = brain.get_current_fittest()
         mean_fitness = brain.get_average_fitness()
         print(
-            "Mean Fitness: {4} | Current Accuracy: {0} | Current species: {1} | Current genome: {2} | Current gen: {3}".format(
+            "Mean Fitness: {} | Current Accuracy: {} | Species Count: {} | Population count: {} | Current gen: {}".format(
+                mean_fitness,
                 current_best.get_fitness(), 
-                brain.get_current_species()+1, 
-                brain.get_current_genome()+1,
-                current_gen, 
-                mean_fitness
+                brain.get_species_count(), 
+                brain.get_population(),
+                current_gen
             )
         )
         sys.stdout.flush()
         #print('saving current population')
-        #brain.save('bipedal')
+        brain.save('bipedal')
+        if current_best.get_fitness() > brain._global_best.get_fitness():
+            with open(f'Bipedal_best_individual_gen{current_gen}', 'wb') as f:
+                pickle.dump(current_best, f)
+
+        brain.update_fittest()
 
     print('done')
     with open('bipedal_best_individual', 'wb') as f:
-        pickle.dump(current_best, f)
+        pickle.dump(brain.get_all_time_fittest, f)
 
     plt.title('fitness over generations')
     plt.plot(brain.get_fitness_history())

@@ -33,7 +33,7 @@ def genomic_distance(a: Node, b: Node, distance_weights: dict):
         len(matching_connections)/num_max_connections
     t3 = distance_weights['weight'] * weight_diff/len(matching_connections)
     t4 = distance_weights['bias'] * bias_diff/num_min_nodes
-    return t1 + t3 + t4  # + t2
+    return t1 + t3 + t2 #t4  # + 
 
 
 class Brain(object):

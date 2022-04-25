@@ -7,9 +7,7 @@ import numpy as np
 #import cart_pole
 import gym
 
-
-
-runs_per_net = 2
+runs_per_net = 4
 # Use the NN network phenotype and the discrete actuator force function.
 def eval_genome(genome, config):
     net = neat.nn.FeedForwardNetwork.create(genome, config)
@@ -18,7 +16,7 @@ def eval_genome(genome, config):
 
     for runs in range(runs_per_net):
         env = gym.make("CartPole-v1")
-
+        env._max_episode_steps = 750
         observation = env.reset()
         fitness = 0.0
         done = False
@@ -37,7 +35,7 @@ def run():
     # Load the config file, which is assumed to live in
     # the same directory as this script.
     local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, 'config')
+    config_path = os.path.join(local_dir, 'cartpoleNeatPythonconfig')
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          config_path)
@@ -51,7 +49,7 @@ def run():
     winner = pop.run(pe.evaluate)
 
     # Save the winner.
-    with open('winner', 'wb') as f:
+    with open('cartpoleNeatPythonBest', 'wb') as f:
         pickle.dump(winner, f)
 
     print(winner)

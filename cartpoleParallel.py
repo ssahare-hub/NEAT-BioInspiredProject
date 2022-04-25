@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 from neato.genome import Genome
 sys.path.append('./neato')
 from neato.brain import Brain
-from neato.hyperparameters import Hyperparameters, tanh
+from neato.hyperparameters import Hyperparameters, tanh, sigmoid
  
 # Constants
 WIDTH, HEIGHT = 640, 480
@@ -43,7 +43,7 @@ def evaluate(genome):
     fitnesses = []
     for i in range(runs_per_net):
         env = gym.make("CartPole-v1")
-        env._max_episode_steps = 750
+        env._max_episode_steps = 950
         observation = env.reset()
 
         fitness = 0.
@@ -70,9 +70,13 @@ def generate_visualized_network(genome: Genome, generation):
     _nodes = genome.get_nodes()
     layer_count = defaultdict(lambda: -1 * genome._inputs)
     index = {}
+    max_nodes_per_layer = genome._inputs
     for n in _nodes:
         layer_count[_nodes[n].layer] += 1
+        if layer_count[_nodes[n].layer] == 0:
+            layer_count[_nodes[n].layer] += 1
         index[n] = layer_count[_nodes[n].layer]
+        max_nodes_per_layer = max( max_nodes_per_layer, layer_count[_nodes[n].layer] + genome._inputs )
     for number in _nodes:
         if genome.is_input(number):
             color = 'blue'
@@ -85,11 +89,10 @@ def generate_visualized_network(genome: Genome, generation):
         else:
             color = 'black'
             x = NETWORK_WIDTH/10 + NETWORK_WIDTH/12 * _nodes[number].layer
-            y = HEIGHT/2 + HEIGHT / \
-                (layer_count[_nodes[number].layer]+2) * index[number]
+            t = max( (layer_count[_nodes[number].layer]) * 2.5, max_nodes_per_layer)
+            y = HEIGHT/2 + (HEIGHT / t) * index[number]
         nodes[number] = [(x, y), color]
 
-    print(len(_nodes))
     genes = genome.get_connections()
     sorted_innovations = sorted(genes.keys())
     for innovation in sorted_innovations:
@@ -103,13 +106,10 @@ def generate_visualized_network(genome: Genome, generation):
         y_values = [nodes[i][0][1], nodes[j][0][1]]
         ax.plot(x_values, y_values, color=color)
 
+
     for n in nodes:
         circle = plt.Circle(nodes[n][0], 5, color=nodes[n][1])
         ax.add_artist(circle)
-        # t = txt.Text(nodes[n][0][0] + 10, nodes[n][0][1], str(genome._nodes[n].layer))
-        # ax.add_artist(t)
-        # t = txt.Text(nodes[n][0][0] - 10, nodes[n][0][1] + 10, str(n), color='red')
-        # ax.add_artist(t)
     if not os.path.exists('cartpole_graphs'):
         os.makedirs('cartpole_graphs')
     if not os.path.exists('cartpole_best_individuals'):
@@ -121,11 +121,13 @@ def generate_visualized_network(genome: Genome, generation):
 def run():
 
     hyperparams = Hyperparameters()
+    hyperparams.default_activation = sigmoid
     #hyperparams.max_generations = 300
     hyperparams.delta_threshold = 1.2
     hyperparams.mutation_probabilities['node'] = 0.05
     hyperparams.mutation_probabilities['connection'] = 0.05
-    hyperparams.max_fitness = 749
+    hyperparams.mutation_probabilities['mutate'] = 0.05
+    hyperparams.max_fitness = 949
     hyperparams.max_generations = 10
 
     inputs = 4
@@ -143,7 +145,7 @@ def run():
 
     current_best = None
     print("Training...")
-    while brain.get_generation() < hyperparams.max_generations:
+    while brain.should_evolve:
         brain.evaluate_parallel(evaluate)
 
         # Print training progress
@@ -152,6 +154,8 @@ def run():
         brain.save_max_fitness_history()
         current_best = brain.get_current_fittest()
         mean_fitness = brain.get_average_fitness()
+        brain.save_network_history(len(current_best.get_connections()))
+        brain.save_population_history()
         print(
             "Mean Fitness: {} | Best Gen Fitness: {} | Species Count: {} |  Current gen: {}".format(
                 mean_fitness,
@@ -162,8 +166,13 @@ def run():
         )
         sys.stdout.flush()
         print('saving current population')
-        brain.save('cartpole')
-        generate_visualized_network(current_best, current_gen)
+        brain.save('cartpole_best_individuals/cartpole')
+        try:
+            generate_visualized_network(current_best, current_gen)
+        except Exception as e:
+            print('Network', '='*40)
+            print(e)
+            print('='*100)
         # NOTE: I wanted to see intermediate results
         # so saving genome whenever it beats the last best
         if current_best.get_fitness() > brain._global_best.get_fitness():
@@ -171,12 +180,29 @@ def run():
                 pickle.dump(current_best, f)
         brain.update_fittest()
         # break
-        plt.figure()
-        plt.title('fitness over generations')
-        plt.plot(brain.get_fitness_history(),label='average')
-        plt.plot(brain.get_max_fitness_history(), label='max')
-        plt.savefig(f'cartpole_graphs/progress.png')
-        plt.close()
+        try:
+            plt.figure()
+            plt.title('fitness over generations')
+            plt.plot(brain.get_fitness_history(),label='average')
+            plt.plot(brain.get_max_fitness_history(), label='max')
+            plt.legend()
+            plt.savefig(f'cartpole_graphs/progress.png')
+            plt.close()
+            plt.figure()
+            plt.plot(brain.get_network_history(), label='network size')
+            plt.legend()
+            plt.savefig(f'cartpole_graphs/network_progress.png')
+            plt.close()
+            plt.figure()
+            plt.plot(brain.get_population_history(), label='population size')
+            plt.legend()
+            plt.savefig(f'cartpole_graphs/population_progress.png')
+            plt.close()
+        except Exception as e:
+            print('progress plots', '='*40)
+            print(e)
+            print('='*100)
+
 
     with open('cartpole_best_individuals/cartpole_best_individual', 'wb') as f:
         pickle.dump(brain._global_best, f)

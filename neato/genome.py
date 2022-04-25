@@ -64,9 +64,9 @@ class Genome(object):
         # create the minimal network by connecting all input nodes to all output nodes
         for i in range(self._inputs):
             for j in range(self._inputs, self._unhidden):
-                self.add_connection(i, j, random.uniform(-1, 1))
+                self.add_connection(i, j, random.uniform(-2, 2))
 
-    def add_connection(self, i: int = -1, j: int = -1, weight: float = random.uniform(-1, 1)) -> None:
+    def add_connection(self, i: int = -1, j: int = -1, weight: float = random.uniform(-2, 2)) -> None:
 
         # NOTE: Random connection creation is unreliable
         if i == -1 & j == -1:
@@ -180,7 +180,7 @@ class Genome(object):
             self.add_node(potential_connections)
         elif choice == "connection":
             (i, j) = self.random_pair()
-            self.add_connection(i, j, random.uniform(-1, 1))
+            self.add_connection(i, j, random.uniform(-2, 2))
             print("add connection between:",(i,j))
             # self._connections[(i, j)].showConn()
         elif choice == "weight_perturb" or choice == "weight_set":
@@ -202,18 +202,35 @@ class Genome(object):
         connection = self._connections[n]
         connection.enabled = False
 
-        print(connection.in_node.layer + 1, connection.out_node.layer)
-        new_node_layer = np.random.randint(
-            connection.in_node.layer + 1, connection.out_node.layer)
-        new_node = self._total_nodes
+        
+        old_node = self.connection_history.node_exists(self._total_nodes)
+        if old_node:
+            new_node = old_node
+            
+        else:
+            new_node_layer = np.random.randint(
+                connection.in_node.layer + 1, connection.out_node.layer)
+            new_node_number = self._total_nodes
+            new_node = Node(
+                new_node_number, new_node_layer, self._default_activation)
+        self._nodes[new_node.number] = new_node
         self._total_nodes += 1
-        # print(new_node,self._total_nodes)
-        self._nodes[new_node] = Node(
-            new_node, new_node_layer, self._default_activation)
-
-        self.add_connection(connection.in_node.number, new_node, 1.0)
+        self.connection_history.allNodes.append(new_node)
+        self.add_connection(connection.in_node.number, new_node.number, 1.0)
         self.add_connection(
-            new_node, connection.out_node.number, connection.weight)
+            new_node.number, connection.out_node.number, connection.weight)
+
+        # new_node_layer = np.random.randint(
+        #     connection.in_node.layer + 1, connection.out_node.layer)
+        # new_node = self._total_nodes
+        # self._total_nodes += 1
+        # # print(new_node,self._total_nodes)
+        # self._nodes[new_node] = Node(
+        #     new_node, new_node_layer, self._default_activation)
+
+        # self.add_connection(connection.in_node.number, new_node, 1.0)
+        # self.add_connection(
+        #     new_node, connection.out_node.number, connection.weight)
 
     def add_enabled(self) -> None:
         """Re-enable a random disabled connection."""
@@ -227,9 +244,9 @@ class Genome(object):
         """Randomly shift, perturb, or set one of the connection weights."""
         e = random.choice(list(self._connections.keys()))
         if type == "weight_perturb":
-            self._connections[e].weight += random.uniform(-1, 1)
+            self._connections[e].weight += random.uniform(-2, 2)
         elif type == "weight_set":
-            self._connections[e].weight = random.uniform(-1, 1)
+            self._connections[e].weight = random.uniform(-2, 2)
 
     def shift_bias(self, type: str) -> None:
         """Randomly shift, perturb, or set the bias of an incoming connection."""

@@ -10,5 +10,5 @@ class Node(object):
         self.layer = l
         self.inConnections: List[Connection] = []
     
-    def __str__(self):
+    def __repr__(self):
         return str(self.number)

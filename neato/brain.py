@@ -60,6 +60,7 @@ class Brain(object):
         self._past_fitnesses = []
         self._global_best = None
         self._past_max_fitnesses = []
+        self._current_fittest: Genome = None
 
     def generate(self):
         """Generate the initial population of genomes."""
@@ -108,11 +109,14 @@ class Brain(object):
         if current_top._fitness > self._global_best._fitness:
             self._global_best = current_top.clone()
 
-    def get_current_fittest(self):
+    def find_current_fittest(self):
         """Update the highest fitness score of the whole population."""
         top_performers = [s.get_best() for s in self._species]
         current_top = max(top_performers, key=lambda g: g._fitness)
         return current_top.clone()
+
+    def get_current_fittest(self):
+        return self._current_fittest
     
     def evolve(self):
         """Evolve the population by eliminating the poorest performing
@@ -125,6 +129,9 @@ class Brain(object):
             s.update_fitness()
             global_fitness_sum += s._fitness_sum
 
+        # update the fittest genome of the generation
+        self._current_fittest = self.find_current_fittest()
+        
         if global_fitness_sum == 0:
             # print('No progress, mutating every genome')
             # No progress, mutate everybody
@@ -270,7 +277,10 @@ class Brain(object):
         fitnesses = []
         for s in self._species:
             for genome in s._members:
-                fitnesses.append(genome.get_fitness())
+                if genome.get_fitness() != 0:
+                    fitnesses.append(genome.get_fitness())
+        if not fitnesses:
+            return 0
         return np.mean(fitnesses)
 
     def get_maximum_fitness(self):

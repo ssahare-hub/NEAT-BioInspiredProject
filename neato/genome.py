@@ -8,6 +8,7 @@ import itertools
 from .connection_history import *
 from .node import *
 from .connection import *
+from .hyperparameters import *
 
 
 class Genome(object):
@@ -159,20 +160,23 @@ class Genome(object):
 
         return [self._nodes[n].output for n in range(self._inputs, self._unhidden)]
 
-    def mutate(self, probabilities: dict) -> None:
+    def mutate(self, hyperparams: Hyperparameters) -> None:
         """Mutate genome randomly with mutation probabilities."""
         if self.is_disabled():
             self.add_enabled()
 
+        mutation_probabilities = hyperparams.mutation_probabilities
+        perturbation_range = hyperparams.perturbation_range
+
         potential_connections = [n for n in self._connections if self._connections[n].enabled
                                  and self._connections[n].in_node.layer+1 < self._connections[n].out_node.layer]
-        choices = list(probabilities.keys())
+        choices = list(mutation_probabilities.keys())
 
         if not potential_connections:
             choices.remove("node")
             print("No node can be added!")
 
-        weights = [probabilities[k] for k in choices]
+        weights = [mutation_probabilities[k] for k in choices]
         choice = random.choices(choices, weights=weights)[0]
 
         if choice == "node":
@@ -185,10 +189,10 @@ class Genome(object):
             # self._connections[(i, j)].showConn()
         elif choice == "weight_perturb" or choice == "weight_set":
             print(choice)
-            self.shift_weight(choice)
+            self.shift_weight(choice,perturbation_range)
         elif choice == "bias_perturb" or choice == "bias_set":
             print(choice)
-            self.shift_bias(choice)
+            self.shift_bias(choice,perturbation_range)
         elif choice == "re-enable":
             print('re enabling a random connection')
             self.add_enabled()
@@ -240,22 +244,22 @@ class Genome(object):
         if len(disabled) > 0:
             self._connections[random.choice(disabled)].enabled = True
 
-    def shift_weight(self, type: str) -> None:
+    def shift_weight(self, type: str, perturbation_range: dict) -> None:
         """Randomly shift, perturb, or set one of the connection weights."""
         e = random.choice(list(self._connections.keys()))
         if type == "weight_perturb":
-            self._connections[e].weight += random.uniform(-2, 2)
+            self._connections[e].weight += random.uniform(perturbation_range['weight_perturb_min'], perturbation_range['weight_perturb_max'])
         elif type == "weight_set":
-            self._connections[e].weight = random.uniform(-2, 2)
+            self._connections[e].weight = random.uniform(perturbation_range['weight_perturb_min'], perturbation_range['weight_perturb_max'])
 
-    def shift_bias(self, type: str) -> None:
+    def shift_bias(self, type: str, perturbation_range: dict) -> None:
         """Randomly shift, perturb, or set the bias of an incoming connection."""
         # Select only nodes in the hidden and output layer
         n = random.choice(range(self._inputs, self._total_nodes))
         if type == "bias_perturb":
-            self._nodes[n].bias += random.uniform(-1, 1)
+            self._nodes[n].bias += random.uniform(perturbation_range['bias_perturb_min'], perturbation_range['bias_perturb_max'])
         elif type == "bias_set":
-            self._nodes[n].bias = random.uniform(-1, 1)
+            self._nodes[n].bias = random.uniform(perturbation_range['bias_perturb_min'], perturbation_range['bias_perturb_max'])
 
     def random_pair(self) -> Tuple[int, int]:
         """Generate random nodes (i, j) such that:

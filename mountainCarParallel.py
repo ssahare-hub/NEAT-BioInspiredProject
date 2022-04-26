@@ -119,6 +119,9 @@ def run():
     hyperparams.mutation_probabilities['bias_perturb'] = 0.8
     hyperparams.mutation_probabilities['bias_set'] = 0.01
     hyperparams.mutation_probabilities['re-enable'] = 0.01
+    hyperparams.perturbation_range['weight_perturb_max'] = 2
+    hyperparams.perturbation_range['weight_perturb_min'] = -2
+
     hyperparams.fitness_offset = 0
     hyperparams.max_fitness = hyperparams.fitness_offset+0.7029
     hyperparams.max_generations = 300

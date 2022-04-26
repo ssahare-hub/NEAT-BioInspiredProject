@@ -53,3 +53,9 @@ class Hyperparameters(object):
             'bias_set': 0.01,
             're-enable': 0.009
         }
+        self.perturbation_range = {
+            'weight_perturb_max': 1,
+            'weight_perturb_min': -1,
+            'bias_perturb_max': 1,
+            'bias_perturb_min': -1,
+        }

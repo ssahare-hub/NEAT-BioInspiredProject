@@ -6,7 +6,7 @@ from neato.genome import Genome
 
 
 def run():
-    with open('cartpole_best_individuals/cartpole_best_individual_gen8', 'rb') as f:
+    with open('cartpole/neato_cartpole_best_individual', 'rb') as f:
         genome: Genome = pickle.load(f)
 
     print('Loaded genome:')

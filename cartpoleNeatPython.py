@@ -6,6 +6,7 @@ import neat
 import numpy as np
 #import cart_pole
 import gym
+import visualize
 
 runs_per_net = 4
 # Use the NN network phenotype and the discrete actuator force function.
@@ -16,7 +17,7 @@ def eval_genome(genome, config):
 
     for runs in range(runs_per_net):
         env = gym.make("CartPole-v1")
-        env._max_episode_steps = 750
+        env._max_episode_steps = 950
         observation = env.reset()
         fitness = 0.0
         done = False
@@ -48,11 +49,26 @@ def run():
     pe = neat.ParallelEvaluator(multiprocessing.cpu_count(), eval_genome)
     winner = pop.run(pe.evaluate)
 
+    if not os.path.exists('cartpoleNP'):
+        os.makedirs('cartpoleNP')
     # Save the winner.
-    with open('cartpoleNeatPythonBest', 'wb') as f:
+    with open('cartpoleNP/cartpoleNeatPythonBest', 'wb') as f:
         pickle.dump(winner, f)
 
     print(winner)
+
+    visualize.plot_stats(stats, ylog=True, view=False, filename="cartpoleNP/feedforward-fitness.svg")
+    visualize.plot_species(stats, view=False, filename="cartpoleNP/feedforward-speciation.svg")
+
+    node_names = {-1: 'x', -2: 'dx', -3: 'theta', -4: 'dtheta', 0: 'control'}
+    visualize.draw_net(config, winner, False, node_names=node_names)
+
+    visualize.draw_net(config, winner, view=False, node_names=node_names,
+                       filename="cartpoleNP/winner-feedforward.gv")
+    visualize.draw_net(config, winner, view=False, node_names=node_names,
+                       filename="cartpoleNP/winner-feedforward-enabled.gv", show_disabled=False)
+    visualize.draw_net(config, winner, view=False, node_names=node_names,
+                       filename="cartpoleNP/winner-feedforward-enabled-pruned.gv", show_disabled=False, prune_unused=True)
 
 
 

@@ -1,12 +1,3 @@
-# pip3 install gym
-# for gym stuff: 
-# apt install xvfb ffmpeg xorg-dev libsdl2-dev swig cmake
-# pip3 install gym[box2d]
-
-
-
-# To use render environment need to use only one cpu in brain and uncomment render part
-#  or it will become frozen. (Probably way to fix this....)
 import multiprocessing
 import os
 import pickle
@@ -49,13 +40,10 @@ def evaluate(genome: Genome):
         fitness = 0.
         done = False
         while not done:
-            #if i == 0:
-            #    env.render()
             action = genome.forward(observation)[0]
             #print(action)
             observation, reward, done, info = env.step(action <= 0.5)
             fitness += reward
-        #env.close()
         fitnesses.append(fitness)
     sys.stdout.flush()
     return np.mean(fitnesses)
@@ -110,11 +98,9 @@ def generate_visualized_network(genome: Genome, generation):
     for n in nodes:
         circle = plt.Circle(nodes[n][0], 5, color=nodes[n][1])
         ax.add_artist(circle)
-    if not os.path.exists('cartpole_graphs'):
-        os.makedirs('cartpole_graphs')
-    if not os.path.exists('cartpole_best_individuals'):
-        os.makedirs('cartpole_best_individuals')
-    plt.savefig(f'cartpole_graphs/{generation}._network.png')
+    if not os.path.exists('cartpole/cartpole_graphs'):
+        os.makedirs('cartpole/cartpole_graphs')
+    plt.savefig(f'cartpole/cartpole_graphs/{generation}._network.png')
     plt.close(fig)
     # plt.show()
 
@@ -124,19 +110,25 @@ def run():
     hyperparams.default_activation = sigmoid
     #hyperparams.max_generations = 300
     hyperparams.delta_threshold = 1.2
-    hyperparams.mutation_probabilities['node'] = 0.05
-    hyperparams.mutation_probabilities['connection'] = 0.05
-    hyperparams.mutation_probabilities['mutate'] = 0.05
+    hyperparams.mutation_probabilities['node'] = 0.2
+    hyperparams.mutation_probabilities['connection'] = 0.2
+    hyperparams.mutation_probabilities['mutate'] = 0.2
+    hyperparams.mutation_probabilities['weight_perturb'] = 0.8
+    hyperparams.mutation_probabilities['weight_set'] = 0.01
+    hyperparams.mutation_probabilities['bias_perturb'] = 0.7
+    hyperparams.mutation_probabilities['bias_set'] = 0.00
+    hyperparams.mutation_probabilities['re-enable'] = 0.01
+    hyperparams.survival_percentage = 0.2
     hyperparams.max_fitness = 949
-    hyperparams.max_generations = 10
+    hyperparams.max_generations = 100
 
     inputs = 4
     outputs = 1
     hidden_layers = 6
     population = 1000
     
-    if os.path.isfile('cartpole.neat'):
-            brain = NeatO.load('cartpole')
+    if os.path.isfile('neato_cartpole.neat'):
+            brain = NeatO.load('neato_cartpole')
             brain._hyperparams = hyperparams
     else:    
             brain = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
@@ -145,40 +137,49 @@ def run():
 
     current_best = None
     print("Training...")
-    while brain.should_evolve:
-        brain.evaluate_parallel(evaluate)
+    #while brain.should_evolve():
+    while brain.get_generation() < hyperparams.max_generations:
+        try:
+            brain.evaluate_parallel(evaluate)
 
-        # Print training progress
-        current_gen = brain.get_generation()
-        brain.save_fitness_history()
-        brain.save_max_fitness_history()
-        current_best = brain.get_current_fittest()
-        mean_fitness = brain.get_average_fitness()
-        brain.save_network_history(len(current_best.get_connections()))
-        brain.save_population_history()
-        print(
-            "Mean Fitness: {} | Best Gen Fitness: {} | Species Count: {} |  Current gen: {}".format(
-                mean_fitness,
-                current_best.get_fitness(), 
-                brain.get_species_count(),
-                current_gen, 
+            # Print training progress
+            current_gen = brain.get_generation()
+            brain.save_fitness_history()
+            brain.save_max_fitness_history()
+            current_best = brain.get_current_fittest()
+            mean_fitness = brain.get_average_fitness()
+            brain.save_network_history(len(current_best.get_connections()))
+            brain.save_population_history()
+            print(
+                "Mean Fitness: {} | Best Gen Fitness: {} | Species Count: {} |  Current gen: {}".format(
+                    mean_fitness,
+                    current_best.get_fitness(), 
+                    brain.get_species_count(),
+                    current_gen, 
+                )
             )
-        )
-        sys.stdout.flush()
-        print('saving current population')
-        brain.save('cartpole_best_individuals/cartpole')
+            sys.stdout.flush()
+            print('saving current population')
+        except Exception as e:
+            print('pre-saving', '-'*100)
+            print(e)
+        try:
+            brain.save('neato_cartpole')
+        except Exception as e:
+            print("Failed to save current brain:")
+            print(e)
         try:
             generate_visualized_network(current_best, current_gen)
+            # NOTE: I wanted to see intermediate results
+            # so saving genome whenever it beats the last best
+            if current_best.get_fitness() > brain._global_best.get_fitness():
+                with open(f'cartpole/neato_cartpole_best_individual_gen{current_gen}', 'wb') as f:
+                    pickle.dump(current_best, f)
+            brain.update_fittest()
         except Exception as e:
             print('Network', '='*40)
             print(e)
             print('='*100)
-        # NOTE: I wanted to see intermediate results
-        # so saving genome whenever it beats the last best
-        if current_best.get_fitness() > brain._global_best.get_fitness():
-            with open(f'cartpole_best_individuals/cartpole_best_individual_gen{current_gen}', 'wb') as f:
-                pickle.dump(current_best, f)
-        brain.update_fittest()
         # break
         try:
             plt.figure()
@@ -186,17 +187,17 @@ def run():
             plt.plot(brain.get_fitness_history(),label='average')
             plt.plot(brain.get_max_fitness_history(), label='max')
             plt.legend()
-            plt.savefig(f'cartpole_graphs/progress.png')
+            plt.savefig(f'cartpole/cartpole_graphs/progress.png')
             plt.close()
             plt.figure()
             plt.plot(brain.get_network_history(), label='network size')
             plt.legend()
-            plt.savefig(f'cartpole_graphs/network_progress.png')
+            plt.savefig(f'cartpole/cartpole_graphs/network_progress.png')
             plt.close()
             plt.figure()
             plt.plot(brain.get_population_history(), label='population size')
             plt.legend()
-            plt.savefig(f'cartpole_graphs/population_progress.png')
+            plt.savefig(f'cartpole/cartpole_graphs/population_progress.png')
             plt.close()
         except Exception as e:
             print('progress plots', '='*40)
@@ -204,7 +205,7 @@ def run():
             print('='*100)
 
 
-    with open('cartpole_best_individuals/cartpole_best_individual', 'wb') as f:
+    with open('cartpole/neato_cartpole_best_individual', 'wb') as f:
         pickle.dump(brain._global_best, f)
 
 if __name__ == '__main__':

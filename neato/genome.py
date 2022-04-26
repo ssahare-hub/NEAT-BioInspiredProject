@@ -12,6 +12,7 @@ from .hyperparameters import *
 
 
 class Genome(object):
+    """ Genome object consists of all information about the genome including the neural network, fitness, and activation function.   """
     def __init__(self, 
         connection_history: ConnectionHistory, 
         default_activation: Callable, 
@@ -87,10 +88,9 @@ class Genome(object):
 
         new_connection = Connection(n1, n2, weight)
 
-        # NOTE: Checks if this connection exists in the connection history of all genomes
-        old_connection = self.connection_history.exists(n1, n2)
+        # Checks if this connection exists in the connection history of all genomes
+        old_connection = self.connection_history.connection_exists(n1, n2)
         if old_connection:
-            # print("connection already exists in the connection history with innovation", old_connection.innovation)
             # if it does, assigns the same innovation number
             new_connection.innovation = old_connection.innovation
             if not self.exists(new_connection.innovation):
@@ -139,9 +139,8 @@ class Genome(object):
             _from[connection.out_node.number].append(connection.in_node.number)
             _innov_to_connections[(
                 connection.in_node.number, connection.out_node.number)] = connection.innovation
-            # print(_from)
 
-        # Calculate output values for each node\
+        # Calculate output values for each node
         ordered_nodes = itertools.chain(
             range(self._unhidden, self._total_nodes),
             range(self._inputs, self._unhidden)
@@ -152,11 +151,9 @@ class Genome(object):
                 innovation = _innov_to_connections[(i, j)]
                 ax += self._connections[innovation].weight * \
                     self._nodes[i].output
-                # print(i,j)
 
             node = self._nodes[j]
             node.output = node.activation(ax + node.bias)
-            # print(j,node.output)
 
         return [self._nodes[n].output for n in range(self._inputs, self._unhidden)]
 
@@ -183,24 +180,15 @@ class Genome(object):
             # print("add node")
             self.add_node(potential_connections)
         elif choice == "connection":
-            (i, j) = self.random_pair()
+            (i, j) = self.random_pair(potential_connections)
             self.add_connection(i, j, random.uniform(-2, 2))
             # print("add connection between:",(i,j))
-            # self._connections[(i, j)].showConn()
         elif choice == "weight_perturb" or choice == "weight_set":
-<<<<<<< Updated upstream
             print(choice)
             self.shift_weight(choice,perturbation_range)
         elif choice == "bias_perturb" or choice == "bias_set":
             print(choice)
             self.shift_bias(choice,perturbation_range)
-=======
-            # print(choice)
-            self.shift_weight(choice)
-        elif choice == "bias_perturb" or choice == "bias_set":
-            # print(choice)
-            self.shift_bias(choice)
->>>>>>> Stashed changes
         elif choice == "re-enable":
             # print('re enabling a random connection')
             self.add_enabled()
@@ -232,18 +220,6 @@ class Genome(object):
         self.add_connection(
             new_node.number, connection.out_node.number, connection.weight)
 
-        # new_node_layer = np.random.randint(
-        #     connection.in_node.layer + 1, connection.out_node.layer)
-        # new_node = self._total_nodes
-        # self._total_nodes += 1
-        # # print(new_node,self._total_nodes)
-        # self._nodes[new_node] = Node(
-        #     new_node, new_node_layer, self._default_activation)
-
-        # self.add_connection(connection.in_node.number, new_node, 1.0)
-        # self.add_connection(
-        #     new_node, connection.out_node.number, connection.weight)
-
     def add_enabled(self) -> None:
         """Re-enable a random disabled connection."""
         disabled = [
@@ -269,7 +245,7 @@ class Genome(object):
         elif type == "bias_set":
             self._nodes[n].bias = random.uniform(perturbation_range['bias_perturb_min'], perturbation_range['bias_perturb_max'])
 
-    def random_pair(self) -> Tuple[int, int]:
+    def random_pair(self, potential_connections) -> Tuple[int, int]:
         """Generate random nodes (i, j) such that:
         1. i is not an output
         2. j is not an input
@@ -284,7 +260,7 @@ class Genome(object):
 
             if not j_list:
                 j = self._total_nodes
-                self.add_node()
+                self.add_node(potential_connections)
             else:
                 j = random.choice(j_list)
         else:
@@ -292,17 +268,14 @@ class Genome(object):
             m = 0
             while innovation in self._connections:
                 m += 1
-                # print("iteration in random pair",m)
                 i = random.choice(
                     [n for n in range(self._total_nodes) if not self.is_output(n)])
                 j_list = [n for n in range(self._total_nodes) if not self.is_input(
                     n) and n != i and self._nodes[n].layer > self._nodes[i].layer]
-                
-                # print(j_list)
 
                 if not j_list:
                     j = self._total_nodes
-                    self.add_node()
+                    self.add_node(potential_connections)
                 else:
                     j = random.choice(j_list)
                 if i != self._connections[innovation].in_node.number and j !=self._connections[innovation].out_node.number:
@@ -358,16 +331,3 @@ class Genome(object):
     def clone(self) -> Genome:
         """Return a clone of the genome."""
         return copy.deepcopy(self)
-    # def add_node(self):
-    #     # self.nodes.append(Node(self._total_nodes, np.random.randint(self.input_layer+1, self.output_layer),self.default_activation))
-    #     self.nodes.append(Node(self._total_nodes, np.random.randint(self.input_layer+1, self.output_layer),self.default_activation))
-    #     self._total_nodes += 1
-
-    # def randomize(self):
-    #     self.weight = np.random.random() * 4 - 2
-
-    # def shift(self):
-    #     self.weight += np.random.uniform(-0.2, 0.2)
-
-    # def toggle(self):
-    #     self.enabled = not self.enabled

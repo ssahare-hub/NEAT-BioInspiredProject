@@ -11,7 +11,7 @@ def run():
 
     print('Loaded genome:')
     for n in genome._connections:
-        genome._connections[n].showConn()
+        genome._connections[n].show_connections()
     for i in range(1):
         env = gym.make("Pendulum-v1") # BipedalWalker-v3
         env.seed(1)

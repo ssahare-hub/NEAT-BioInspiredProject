@@ -1,9 +1,9 @@
 # %%
-from neato.brain import Brain
+from neato.neato import NeatO
 from neato.species import Species
 import pickle
 # %%
-brain = Brain.load('pendulum')
+brain = NeatO.load('pendulum')
 with open('pendulum_best_individual_gen88', 'rb') as f:
         genome = pickle.load(f)
 # %%

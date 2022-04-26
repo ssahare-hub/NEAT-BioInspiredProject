@@ -9,7 +9,7 @@ import pygame
 from pygame.locals import *
 
 sys.path.append('./neato')
-from neato.brain import Brain
+from neato.neato import NeatO
 from neato.hyperparameters import Hyperparameters
 
  
@@ -151,7 +151,7 @@ def main():
 
     # Load the bird's brain
     if os.path.isfile('flappy_bird.neat'):
-        brain = Brain.load('flappy_bird')
+        brain = NeatO.load('flappy_bird')
     else:
         hyperparams = Hyperparameters()
         hyperparams.delta_threshold = 0.75
@@ -159,8 +159,8 @@ def main():
         hyperparams.mutation_probabilities['node'] = 0.05
         hyperparams.mutation_probabilities['connection'] = 0.05
 
-        brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
-        brain.generate()
+        brain = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
+        brain.initialize()
 
     inputs = [0, 0, 0, 0]
     output = 0

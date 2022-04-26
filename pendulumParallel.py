@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 # import pygame
 sys.path.append('./neato')
 from neato.genome import Genome
-from neato.brain import Brain
+from neato.neato import NeatO
 from neato.hyperparameters import Hyperparameters, tanh
 
 EPISODE_DURATION = 200
@@ -136,11 +136,11 @@ def run():
     hidden_layers = 12
     population = 300
     if os.path.isfile('neato_pendulum.neat'):
-        brain = Brain.load('neato_pendulum')
+        brain = NeatO.load('neato_pendulum')
         brain._hyperparams = hyperparams
     else:
-        brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
-        brain.generate()
+        brain = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
+        brain.initialize()
         print(hyperparams.max_fitness)
 
     

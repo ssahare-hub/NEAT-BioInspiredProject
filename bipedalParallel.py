@@ -6,7 +6,8 @@ import gym
 import os
 import sys
 sys.path.append('./neato')
-from neato.brain import Brain
+from neato.genome import Genome
+from neato.neato import NeatO
 from neato.hyperparameters import Hyperparameters, tanh
 
 EPISODE_DURATION = 500
@@ -55,11 +56,11 @@ def run():
     population = 200
     
     if os.path.isfile('bipedal.neat'):
-        brain = Brain.load('bipedal')
+        brain = NeatO.load('bipedal')
         brain._hyperparams = hyperparams
     else:    
-        brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
-        brain.generate()
+        brain = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
+        brain.initialize()
         print(hyperparams.max_fitness)
 
     current_best = None

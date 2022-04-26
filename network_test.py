@@ -2,7 +2,7 @@
 from collections import defaultdict
 import os
 import random
-from neato.brain import Brain
+from neato.neato import NeatO
 import matplotlib.pyplot as plt
 import matplotlib.text as txt
 import pickle

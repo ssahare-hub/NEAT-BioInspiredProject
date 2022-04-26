@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 
 from neato.genome import Genome
 sys.path.append('./neato')
-from neato.brain import Brain
+from neato.neato import NeatO
 from neato.hyperparameters import Hyperparameters, tanh, sigmoid
  
 # Constants
@@ -136,11 +136,11 @@ def run():
     population = 1000
     
     if os.path.isfile('cartpole.neat'):
-            brain = Brain.load('cartpole')
+            brain = NeatO.load('cartpole')
             brain._hyperparams = hyperparams
     else:    
-            brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
-            brain.generate()
+            brain = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
+            brain.initialize()
             print(hyperparams.max_fitness)
 
     current_best = None

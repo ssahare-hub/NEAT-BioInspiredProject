@@ -9,7 +9,7 @@ import sys
 import matplotlib.pyplot as plt
 sys.path.append('./neato')
 from neato.genome import Genome
-from neato.brain import Brain
+from neato.neato import NeatO
 from neato.hyperparameters import Hyperparameters, tanh
 
 EPISODE_DURATION = 500
@@ -136,11 +136,11 @@ def run():
     hidden_layers = 6
     population = 1000
     if os.path.isfile('mountaincar.neat'):
-        brain = Brain.load('mountaincar')
+        brain = NeatO.load('mountaincar')
         brain._hyperparams = hyperparams
     else:    
-        brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
-        brain.generate()
+        brain = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
+        brain.initialize()
         print(hyperparams.max_fitness)
 
     current_best = None

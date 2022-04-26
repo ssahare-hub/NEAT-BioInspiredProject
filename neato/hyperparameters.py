@@ -2,7 +2,7 @@ import math
 
 
 def sigmoid(x: float):
-    """Return the S-Curve activation of x."""
+    """Wrapper for Sigmoid of x."""
     return 1/(1+math.exp(-x))
 
 
@@ -12,7 +12,7 @@ def tanh(x: float):
 
 
 def LReLU(x: float):
-    """Leaky ReLU function for x"""
+    """Wrapper for Leaky ReLU function for x"""
     if x >= 0:
         return x
     else:
@@ -20,7 +20,7 @@ def LReLU(x: float):
 
 
 class Hyperparameters(object):
-    """Hyperparameter settings for the Brain object."""
+    """Hyperparameter settings for the NeatO object."""
 
     def __init__(self):
         self.delta_threshold = 1.5

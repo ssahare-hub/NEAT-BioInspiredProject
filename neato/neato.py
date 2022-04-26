@@ -39,7 +39,7 @@ class NeatO(object):
         for _ in range(self._population):
             g = Genome(self._connection_history,
                        self._hyperparams.default_activation)
-            g.createNetwork()
+            g.create_network()
             self.speciation(g)
         # print("generating genome for population")
 
@@ -188,7 +188,7 @@ class NeatO(object):
         Use Multiprocessing to process individual genomes in independent python processes
          as well as joining the results when they are done. This method also triggers the evolution.
         """
-        max_proc = max(mp.cpu_count(), 1)
+        max_proc = max(mp.cpu_count()-1, 1)
         pool = mp.Pool(processes=max_proc)
 
         # generates jobs for generation

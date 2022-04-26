@@ -41,9 +41,9 @@ class Genome(object):
         self._adjusted_fitness = 0
 
         if willCreate:
-            self.createNetwork()
+            self.create_network()
 
-    def createNetwork(self) -> None:
+    def create_network(self) -> None:
         # Create Input nodes
         for i in range(self._inputs):
             self._nodes[i] = Node(
@@ -171,7 +171,7 @@ class Genome(object):
 
         if not potential_connections:
             choices.remove("node")
-            print("No node can be added!")
+            # print("No node can be added!")
 
         weights = [mutation_probabilities[k] for k in choices]
         choice = random.choices(choices, weights=weights)[0]
@@ -184,10 +184,10 @@ class Genome(object):
             self.add_connection(i, j, random.uniform(-2, 2))
             # print("add connection between:",(i,j))
         elif choice == "weight_perturb" or choice == "weight_set":
-            print(choice)
+            # print(choice)
             self.shift_weight(choice,perturbation_range)
         elif choice == "bias_perturb" or choice == "bias_set":
-            print(choice)
+            # print(choice)
             self.shift_bias(choice,perturbation_range)
         elif choice == "re-enable":
             # print('re enabling a random connection')

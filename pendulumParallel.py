@@ -45,7 +45,7 @@ def evaluate(genome:Genome):
             while not done:
                 action = genome.forward(last_observation)[0]
                 next_observation, reward, done, info = env.step([action * 2])
-                reward = 25* np.exp(-1*(next_observation[0]-1)*(next_observation[0]-1)/0.001)-100*np.abs(10*0.5 - (10*0.5*next_observation[0] + 0.5*0.3333*next_observation[2] * next_observation[2])) + 100*np.abs(10*0.5 - (10*0.5*last_observation[0] + 0.5*0.3333*last_observation[2] * last_observation[2]))
+                # reward = np.exp(-1*(next_observation[0]-1)*(next_observation[0]-1)/0.001)-100*np.abs(10*0.5 - (10*0.5*next_observation[0] + 0.5*0.3333*next_observation[2] * next_observation[2])) + 100*np.abs(10*0.5 - (10*0.5*last_observation[0] + 0.5*0.3333*last_observation[2] * last_observation[2]))
                 fitness += reward
                 last_observation = next_observation
             fitnesses.append(fitness)
@@ -106,9 +106,9 @@ def generate_visualized_network(genome: Genome, generation):
     for n in nodes:
         circle = plt.Circle(nodes[n][0], 5, color=nodes[n][1])
         ax.add_artist(circle)
-    if not os.path.exists('pendulum_graphs'):
-        os.makedirs('pendulum_graphs')
-    plt.savefig(f'pendulum_graphs/{generation}._network.png')
+    if not os.path.exists('pendulum/pendulum_graphs'):
+        os.makedirs('pendulum/pendulum_graphs')
+    plt.savefig(f'pendulum/pendulum_graphs/{generation}._network.png')
     plt.close()
 
 

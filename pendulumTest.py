@@ -6,7 +6,7 @@ from neato.genome import Genome
 
 EPISODE_DURATION = 200
 def run():
-    with open('improved_reward_pendulum_best_individual_gen95', 'rb') as f:
+    with open('pendulum/neato_pendulum_best_individual_gen74', 'rb') as f:
         genome: Genome = pickle.load(f)
 
     print('Loaded genome:')

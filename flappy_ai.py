@@ -25,6 +25,8 @@ DRAW_NETWORK = True
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
+GREEN = (0,255,0)
+BLUE = (0, 0, 200)
 
 
 class Bird:
@@ -33,7 +35,7 @@ class Bird:
         self.pos = [x, y]
         self.vel = [0, 0]
 
-        self.bounce = 7
+        self.bounce = 8
         self.gravity = 0.5
         self.terminal_vel = 10
         self.onGround = False
@@ -154,7 +156,7 @@ def main():
         brain = NeatO.load('flappy_bird')
     else:
         hyperparams = Hyperparameters()
-        hyperparams.delta_threshold = 0.75
+        hyperparams.delta_threshold = 1.5
 
         hyperparams.mutation_probabilities['node'] = 0.05
         hyperparams.mutation_probabilities['connection'] = 0.05
@@ -168,7 +170,7 @@ def main():
     generate_visualized_network(brain.get_current(), nodes)
 
     while True:
-        display.fill(BLACK)
+        display.fill(BLUE)
         network_display.fill(WHITE)
 
         # Simulation logic
@@ -248,7 +250,7 @@ def main():
         pygame.display.update()
 
         # Uncomment this to cap the framerate
-        clock.tick(1000)
+        # clock.tick(1000)
 
 if __name__ == "__main__":
     main()

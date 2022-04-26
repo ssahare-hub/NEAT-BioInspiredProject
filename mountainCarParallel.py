@@ -61,9 +61,13 @@ def generate_visualized_network(genome: Genome, generation):
     _nodes = genome.get_nodes()
     layer_count = defaultdict(lambda: -1 * genome._inputs)
     index = {}
+    max_nodes_per_layer = genome._inputs
     for n in _nodes:
         layer_count[_nodes[n].layer] += 1
+        if layer_count[_nodes[n].layer] == 0:
+            layer_count[_nodes[n].layer] += 1
         index[n] = layer_count[_nodes[n].layer]
+        max_nodes_per_layer = max( max_nodes_per_layer, layer_count[_nodes[n].layer] + genome._inputs )
     for number in _nodes:
         if genome.is_input(number):
             color = 'blue'
@@ -76,11 +80,11 @@ def generate_visualized_network(genome: Genome, generation):
         else:
             color = 'black'
             x = NETWORK_WIDTH/10 + NETWORK_WIDTH/12 * _nodes[number].layer
-            y = HEIGHT/2 + HEIGHT / \
-                (layer_count[_nodes[number].layer]+2) * index[number]
+            t = max( (layer_count[_nodes[number].layer]) * 2.5, max_nodes_per_layer)
+            y = HEIGHT/2 + (HEIGHT / t) * index[number]
         nodes[number] = [(x, y), color]
 
-    print(len(_nodes))
+    # print(len(_nodes))
     genes = genome.get_connections()
     sorted_innovations = sorted(genes.keys())
     for innovation in sorted_innovations:
@@ -104,7 +108,7 @@ def generate_visualized_network(genome: Genome, generation):
     if not os.path.exists('mountaincar_graphs'):
         os.makedirs('mountaincar_graphs')
     plt.savefig(f'mountaincar_graphs/{generation}._network.png')
-    # plt.show()
+    plt.close()
 
 def run():
 
@@ -172,11 +176,28 @@ def run():
                 pickle.dump(current_best, f)
         brain.update_fittest()
         # break
-        plt.figure()
-        plt.title('fitness over generations')
-        plt.plot(brain.get_fitness_history(),label='average')
-        plt.plot(brain.get_max_fitness_history(), label='max')
-        plt.savefig(f'mountaincar_graphs/progress.png')
+        try:
+            plt.figure()
+            plt.title('fitness over generations')
+            plt.plot(brain.get_fitness_history(),label='average')
+            plt.plot(brain.get_max_fitness_history(), label='max')
+            plt.legend()
+            plt.savefig(f'mountaincar_graphs/progress.png')
+            plt.close()
+            plt.figure()
+            plt.plot(brain.get_network_history(), label='network size')
+            plt.legend()
+            plt.savefig(f'mountaincar_graphs/network_progress.png')
+            plt.close()
+            plt.figure()
+            plt.plot(brain.get_population_history(), label='population size')
+            plt.legend()
+            plt.savefig(f'mountaincar_graphs/population_progress.png')
+            plt.close()
+        except Exception as e:
+            print('progress plots', '='*40)
+            print(e)
+            print('='*100)
 
     print('done')
     with open('mountaincar_best_individual', 'wb') as f:

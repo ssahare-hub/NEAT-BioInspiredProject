@@ -80,10 +80,12 @@ class Species(object):
         self._fitness_sum = 0
         self._max_fitness_history = max_fitness_history
 
-    def breed(self, mutation_probabilities: dict, breed_probabilities: dict) -> Node:
+    def breed(self, hyperparams: Hyperparameters) -> Node:
         """Genrate and return offspring (child) either through cloning or crossover 
         followed by mutation.
         """
+        mutation_probabilities = hyperparams.mutation_probabilities
+        breed_probabilities = hyperparams.breed_probabilities
         # Either mutate a clone or breed two random genomes
         population = list(breed_probabilities.keys())
         probabilities = [breed_probabilities[k] for k in population]
@@ -91,15 +93,15 @@ class Species(object):
 
         if choice == "asexual" or len(self._members) == 1:
             child = random.choice(self._members).clone()
-            # child.mutate(mutation_probabilities)
+            # child.mutate(hyperparams)
         elif choice == "sexual":
             (mom, dad) = random.sample(self._members, 2)
             child = genomic_crossover(mom, dad)
 
         if random.random() <= mutation_probabilities['mutate']:
-            child.mutate(mutation_probabilities)
+            child.mutate(hyperparams)
         # NOTE: do we add mutation after sexual crossover?
-        # child.mutate(mutation_probabilities)
+        # child.mutate(hyperparams)
         return child
 
     def update_fitness(self) -> None:

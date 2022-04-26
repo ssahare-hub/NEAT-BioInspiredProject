@@ -140,7 +140,7 @@ class Brain(object):
             # No progress, mutate everybody
             for s in self._species:
                 for g in s._members:
-                    g.mutate(self._hyperparams.mutation_probabilities)
+                    g.mutate(self._hyperparams)
         else:
             # Only keep the species with potential to improve
             # print('Collecting species with potential to improve')
@@ -164,8 +164,7 @@ class Brain(object):
                 for j in range(offspring):
                     self.classify_genome(
                         s.breed(
-                            self._hyperparams.mutation_probabilities,
-                            self._hyperparams.breed_probabilities
+                            self._hyperparams
                         )
                     )
 
@@ -182,7 +181,7 @@ class Brain(object):
                         g = Genome(self._connection_history,
                                    self._hyperparams.default_activation, 
                                    True)
-                    g.mutate(self._hyperparams.mutation_probabilities)
+                    g.mutate(self._hyperparams)
                     self.classify_genome(g)
 
         self._generation += 1

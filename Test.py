@@ -92,8 +92,8 @@ def main():
         
         pygame.display.update()
         try:
-            g.mutate(hyperparameters.mutation_probabilities)
-            g2.mutate(hyperparameters.mutation_probabilities)
+            g.mutate(hyperparameters)
+            g2.mutate(hyperparameters)
 
             g._fitness = g.forward([10,1,2,3])
             g2._fitness = g2.forward([10,1,2,3])

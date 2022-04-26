@@ -1,23 +1,18 @@
-import multiprocessing
 import os
 import pickle
-
 import matplotlib.pyplot as plt
 import numpy as np
-#import cart_pole
 import gym
-import math
 import os
 import sys
-
 sys.path.append('./neato')
 from neato.brain import Brain
-from neato.hyperparameters import Hyperparameters, tanh, sigmoid
+from neato.hyperparameters import Hyperparameters, tanh
 
 EPISODE_DURATION = 500
 seed = 0 # environment seed
 
-def evaluate(genome):
+def evaluate(genome: Genome):
     """Evaluates the current genome."""
     fitnesses = []
     for i in range(2):

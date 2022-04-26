@@ -74,12 +74,10 @@ def generate_visualized_network(genome: Genome, generation):
     if not os.path.exists('pendulum_graphs'):
         os.makedirs('pendulum_graphs')
     plt.show()
-    # plt.savefig(f'pendulum_graphs/{generation}._network.png')
-    # plt.clf()
 
 
 with open('mountaincar_best_individual', 'rb') as f:
-    genome = pickle.load(f)
+    genome: Genome = pickle.load(f)
     generate_visualized_network(genome, 1)
 
 # %%

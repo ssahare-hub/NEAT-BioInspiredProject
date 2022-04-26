@@ -1,20 +1,14 @@
 import pickle
-
-import numpy as np
-#import cart_pole
 import gym
-import math
-import os
 import sys
-
 sys.path.append('./neato')
-from neato.brain import Brain
-from neato.hyperparameters import Hyperparameters
+from neato.genome import Genome
+
 
 
 def run():
     with open('bipedal_best_individual', 'rb') as f:
-        genome = pickle.load(f)
+        genome: Genome = pickle.load(f)
 
     print('Loaded genome:')
     for n in genome._connections:

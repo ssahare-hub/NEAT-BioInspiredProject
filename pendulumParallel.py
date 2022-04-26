@@ -1,10 +1,3 @@
-# pip3 install gym
-# for gym stuff: 
-# apt install xvfb ffmpeg xorg-dev libsdl2-dev swig cmake
-# pip3 install gym[box2d]
-
-
-
 # To use render environment need to use only one cpu in brain and uncomment render part
 #  or it will become frozen. (Probably way to fix this....)
 from collections import defaultdict
@@ -24,7 +17,7 @@ from neato.genome import Genome
 from neato.brain import Brain
 from neato.hyperparameters import Hyperparameters, tanh
 
-EPISODE_DURATION = 500
+EPISODE_DURATION = 200
  
 # Constants
 WIDTH, HEIGHT = 640, 480
@@ -38,31 +31,30 @@ DRAW_NETWORK = True
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
-SEED = 1
 
 def evaluate(genome:Genome):
     """Evaluates the current genome."""
-    fitnesses = []
-    for i in range(5):
-        env = gym.make("Pendulum-v1")
-        env._max_episode_steps = EPISODE_DURATION
-        env.seed(SEED)
-        last_observation = env.reset()
-
-        fitness = 0.
-        done = False
-        while not done:
-            #if i == 0:
-            #    env.render()
-            action = genome.forward(last_observation)[0]
-
-            next_observation, reward, done, info = env.step([action*2])
-            reward = 25* np.exp(-1*(next_observation[0]-1)*(next_observation[0]-1)/0.001)-100*np.abs(10*0.5 - (10*0.5*next_observation[0] + 0.5*0.3333*next_observation[2] * next_observation[2])) + 100*np.abs(10*0.5 - (10*0.5*last_observation[0] + 0.5*0.3333*last_observation[2] * last_observation[2]))
-            fitness += reward
-            last_observation = next_observation
-        fitnesses.append(fitness)
-    sys.stdout.flush()
-    return np.mean(fitnesses)
+    try:
+        fitnesses = []
+        for i in range(5):
+            env = gym.make("Pendulum-v1")
+            env._max_episode_steps = EPISODE_DURATION
+            last_observation = env.reset()
+            fitness = 0.
+            done = False
+            while not done:
+                action = genome.forward(last_observation)[0]
+                next_observation, reward, done, info = env.step([action * 2])
+                reward = 25* np.exp(-1*(next_observation[0]-1)*(next_observation[0]-1)/0.001)-100*np.abs(10*0.5 - (10*0.5*next_observation[0] + 0.5*0.3333*next_observation[2] * next_observation[2])) + 100*np.abs(10*0.5 - (10*0.5*last_observation[0] + 0.5*0.3333*last_observation[2] * last_observation[2]))
+                fitness += reward
+                last_observation = next_observation
+            fitnesses.append(fitness)
+        sys.stdout.flush()
+        return np.mean(fitnesses)
+    except Exception as e:
+        print('Evaluate','='*100)
+        print(e)
+        return 0
 
 
 def generate_visualized_network(genome: Genome, generation):
@@ -125,21 +117,26 @@ def run():
     hyperparams = Hyperparameters()
     #hyperparams.max_generations = 300
     hyperparams.default_activation = tanh
-    hyperparams.delta_threshold = 0.75
-    hyperparams.mutation_probabilities['node'] = 0.05
-    hyperparams.mutation_probabilities['connection'] = 0.05
-    hyperparams.mutation_probabilities['weight_perturb'] = 0.1
+    hyperparams.delta_threshold = 2
+    hyperparams.mutation_probabilities['node'] = 0.2
+    hyperparams.mutation_probabilities['connection'] = 0.2
     hyperparams.mutation_probabilities['mutate'] = 0.75
+    hyperparams.mutation_probabilities['weight_perturb'] = 0.8
+    hyperparams.mutation_probabilities['weight_set'] = 0.01
+    hyperparams.mutation_probabilities['bias_perturb'] = 0.8
+    hyperparams.mutation_probabilities['bias_set'] = 0.01
+    hyperparams.mutation_probabilities['re-enable'] = 0.01
     hyperparams.fitness_offset = 0 * EPISODE_DURATION
-    hyperparams.max_fitness = hyperparams.fitness_offset
+    hyperparams.max_fitness = 8000
     hyperparams.max_generations = 300
+    hyperparams.survival_percentage = 0.50
 
     inputs = 3
     outputs = 1
-    hidden_layers = 9
-    population = 200
-    if os.path.isfile('pendulum.neat'):
-        brain = Brain.load('pendulum')
+    hidden_layers = 12
+    population = 300
+    if os.path.isfile('neato_pendulum.neat'):
+        brain = Brain.load('neato_pendulum')
         brain._hyperparams = hyperparams
     else:
         brain = Brain(inputs, outputs, hidden_layers, population, hyperparams)
@@ -148,43 +145,50 @@ def run():
 
     
     current_best = None
-    network_size_history = []
-    population_history = []
     print("Training...")
-    while brain.get_generation() < hyperparams.max_generations:
-        brain.evaluate_parallel(evaluate)
+    # while brain.get_generation() < hyperparams.max_generations:
+    while brain.should_evolve():
+        try:
+            brain.evaluate_parallel(evaluate)
 
-        # Print training progress
-        current_gen = brain.get_generation()
-        brain.save_fitness_history()
-        brain.save_max_fitness_history()
-        current_best = brain.get_current_fittest()
-        mean_fitness = brain.get_average_fitness()
-        brain.save_network_history(len(current_best.get_connections()))
-        brain.save_population_history()
-        print(
-            "Mean Fitness: {} | Best Gen Fitness: {} | Species Count: {} |  Current gen: {}".format(
-                mean_fitness,
-                current_best.get_fitness(), 
-                brain.get_species_count(),
-                current_gen, 
+            # Print training progress
+            current_gen = brain.get_generation()
+            brain.save_fitness_history()
+            brain.save_max_fitness_history()
+            current_best = brain.get_current_fittest()
+            mean_fitness = brain.get_average_fitness()
+            brain.save_network_history(len(current_best.get_connections()))
+            brain.save_population_history()
+            print(
+                "Mean Fitness: {} | Best Gen Fitness: {} | Species Count: {} |  Current gen: {}".format(
+                    mean_fitness,
+                    current_best.get_fitness(), 
+                    brain.get_species_count(),
+                    current_gen, 
+                )
             )
-        )
-        sys.stdout.flush()
-        print('saving current population')
-        brain.save('pendulum')
+            sys.stdout.flush()
+            print('saving current population')
+        except Exception as e:
+            print('pre-saving', '-'*100)
+            print(e)
+        try:
+            brain.save('neato_pendulum')
+        except Exception as e:
+            print("Failed to save current brain:")
+            print(e)
         try:
             generate_visualized_network(current_best, current_gen)
+            # NOTE: I wanted to see intermediate results
+            # so saving genome whenever it beats the last best
+            if current_best.get_fitness() > brain._global_best.get_fitness():
+                with open(f'pendulum/neato_pendulum_best_individual_gen{current_gen}', 'wb') as f:
+                    pickle.dump(current_best, f)
+            brain.update_fittest()
         except Exception as e:
             print('Network', '='*40)
             print(e)
             print('='*100)
-        # NOTE: I wanted to see intermediate results
-        # so saving genome whenever it beats the last best
-        if current_best.get_fitness() > brain._global_best.get_fitness():
-            with open(f'pendulum_best_individual_gen{current_gen}', 'wb') as f:
-                pickle.dump(current_best, f)
-        brain.update_fittest()
         # break
         try:
             plt.figure()
@@ -192,24 +196,25 @@ def run():
             plt.plot(brain.get_fitness_history(),label='average')
             plt.plot(brain.get_max_fitness_history(), label='max')
             plt.legend()
-            plt.savefig(f'pendulum_graphs/progress.png')
+            plt.savefig(f'pendulum/pendulum_graphs/progress.png')
             plt.close()
             plt.figure()
             plt.plot(brain.get_network_history(), label='network size')
             plt.legend()
-            plt.savefig(f'pendulum_graphs/network_progress.png')
+            plt.savefig(f'pendulum/pendulum_graphs/network_progress.png')
             plt.close()
             plt.figure()
             plt.plot(brain.get_population_history(), label='population size')
             plt.legend()
-            plt.savefig(f'pendulum_graphs/population_progress.png')
+            plt.savefig(f'pendulum/pendulum_graphs/population_progress.png')
             plt.close()
         except Exception as e:
             print('progress plots', '='*40)
             print(e)
             print('='*100)
+        # break
 
-    with open('pendulum_best_individual', 'wb') as f:
+    with open('pendulum/neato_pendulum_best_individual', 'wb') as f:
         pickle.dump(brain._global_best, f)
     
 

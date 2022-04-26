@@ -180,21 +180,29 @@ class Genome(object):
         choice = random.choices(choices, weights=weights)[0]
 
         if choice == "node":
-            print("add node")
+            # print("add node")
             self.add_node(potential_connections)
         elif choice == "connection":
             (i, j) = self.random_pair()
             self.add_connection(i, j, random.uniform(-2, 2))
-            print("add connection between:",(i,j))
+            # print("add connection between:",(i,j))
             # self._connections[(i, j)].showConn()
         elif choice == "weight_perturb" or choice == "weight_set":
+<<<<<<< Updated upstream
             print(choice)
             self.shift_weight(choice,perturbation_range)
         elif choice == "bias_perturb" or choice == "bias_set":
             print(choice)
             self.shift_bias(choice,perturbation_range)
+=======
+            # print(choice)
+            self.shift_weight(choice)
+        elif choice == "bias_perturb" or choice == "bias_set":
+            # print(choice)
+            self.shift_bias(choice)
+>>>>>>> Stashed changes
         elif choice == "re-enable":
-            print('re enabling a random connection')
+            # print('re enabling a random connection')
             self.add_enabled()
         self.reset()
 

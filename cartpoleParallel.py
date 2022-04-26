@@ -38,7 +38,7 @@ WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
 
 runs_per_net=4
-def evaluate(genome):
+def evaluate(genome: Genome):
     """Evaluates the current genome."""
     fitnesses = []
     for i in range(runs_per_net):

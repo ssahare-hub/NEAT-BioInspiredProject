@@ -15,15 +15,15 @@ def genomic_crossover(a: Node, b: Node) -> Node:
     a_in = set(a._connections)
     b_in = set(b._connections)
     matching_connections = a_in & b_in
-    total_nodes = set()
+    # total_nodes = set()
 
     # Inherit homologous gene from a random parent
     for i in matching_connections:
         parent = random.choice([a, b])
         child._connections[i] = copy.deepcopy(parent._connections[i])
         # NOTE: testing alternate method to keep track of total nodes
-        total_nodes.add(child._connections[i].in_node.number)
-        total_nodes.add(child._connections[i].out_node.number)
+        # total_nodes.add(child._connections[i].in_node.number)
+        # total_nodes.add(child._connections[i].out_node.number)
 
     # Inherit disjoint/excess genes from fitter parent
     disjoint_connections = a_in - b_in
@@ -36,8 +36,8 @@ def genomic_crossover(a: Node, b: Node) -> Node:
     for i in disjoint_connections:
         child._connections[i] = copy.deepcopy(parent._connections[i])
         # NOTE: testing alternate method to keep track of total nodes
-        total_nodes.add(child._connections[i].in_node.number)
-        total_nodes.add(child._connections[i].out_node.number)
+        # total_nodes.add(child._connections[i].in_node.number)
+        # total_nodes.add(child._connections[i].out_node.number)
 
     # Calculate total nodes
     child._total_nodes = 0
@@ -49,9 +49,9 @@ def genomic_crossover(a: Node, b: Node) -> Node:
 
     child._total_nodes += 1
     # NOTE: testing alternate method to keep track of total nodes
-    if len(total_nodes) != child._total_nodes:
-        print(list(sorted(total_nodes)))
-        print(child._total_nodes)
+    # if len(total_nodes) != child._total_nodes:
+    #     print(list(sorted(total_nodes)))
+    #     print(child._total_nodes)
 
     # Inherit nodes
     for n in range(child._total_nodes):

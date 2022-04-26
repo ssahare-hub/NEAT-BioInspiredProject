@@ -1,6 +1,7 @@
 import multiprocessing
 import os
 import pickle
+from typing import List
 
 import neat
 import math

@@ -10,7 +10,7 @@ import gym
 import visualize
 
 
-runs_per_net = 2
+runs_per_net = 5
 
 def eval_genome(genome, config):
     net = neat.nn.FeedForwardNetwork.create(genome, config)

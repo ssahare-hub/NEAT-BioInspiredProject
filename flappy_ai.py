@@ -4,11 +4,11 @@
 import sys
 import os
 import random
-from neato.genome import Genome
 import pygame
 from pygame.locals import *
 
 sys.path.append('./neato')
+from neato.genome import Genome
 from neato.neato import NeatO
 from neato.hyperparameters import Hyperparameters
 
@@ -16,7 +16,6 @@ from neato.hyperparameters import Hyperparameters
 # Constants
 WIDTH, HEIGHT = 640, 480
 NETWORK_WIDTH = 480
-
 # Flags
 AI = True
 DRAW_NETWORK = True
@@ -26,12 +25,12 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
 GREEN = (0,255,0)
-BLUE = (0, 0, 200)
+BLUE = (0, 0, 50)
 
 
 class Bird:
     def __init__(self, x, y):
-        self.dim = [20, 20]
+        self.dim = [12, 12]
         self.pos = [x, y]
         self.vel = [0, 0]
 
@@ -44,7 +43,7 @@ class Bird:
 
     def draw(self, surf):
         center_pos = (int(self.pos[0]-self.dim[0]//2), int(self.pos[1]-self.dim[1]//2))
-        pygame.draw.rect(surf, WHITE, (center_pos, self.dim))
+        pygame.draw.circle(surf, GREEN, center_pos, self.dim[0])
 
     def update(self):
         if self.vel[1] < self.terminal_vel:
@@ -144,30 +143,33 @@ def main():
 
     inputs = 4
     outputs = 1
-    hidden_layers = 6
+    hidden_layers = 7
     population = 100
 
     player = Bird(WIDTH/4, HEIGHT/2)
     pipes = []
     ahead = []
 
-    # Load the bird's brain
+    hyperparams = Hyperparameters()
+    hyperparams.delta_threshold = 2
+
+    hyperparams.mutation_probabilities['node'] = 0.05
+    hyperparams.mutation_probabilities['connection'] = 0.05
+    hyperparams.mutation_probabilities['weight_perturb'] = 0.1
+    hyperparams.mutation_probabilities['mutate'] = 0.3
+    # Load the bird's neato
     if os.path.isfile('flappy_bird.neat'):
-        brain = NeatO.load('flappy_bird')
+        neato = NeatO.load('flappy_bird')
+        neato._hyperparams = hyperparams
     else:
-        hyperparams = Hyperparameters()
-        hyperparams.delta_threshold = 1.5
 
-        hyperparams.mutation_probabilities['node'] = 0.05
-        hyperparams.mutation_probabilities['connection'] = 0.05
-
-        brain = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
-        brain.initialize()
+        neato = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
+        neato.initialize()
 
     inputs = [0, 0, 0, 0]
     output = 0
     nodes = {}
-    generate_visualized_network(brain.get_current(), nodes)
+    generate_visualized_network(neato.get_current(), nodes)
 
     while True:
         display.fill(BLUE)
@@ -200,11 +202,11 @@ def main():
             player = Bird(WIDTH/4, HEIGHT/2)
 
             if AI:
-                # Save the bird's brain
-                brain.save('flappy_bird')
-                brain.next_iteration()
+                # Save the bird's neato
+                neato.save('flappy_bird')
+                neato.next_iteration()
                 nodes = {}
-                generate_visualized_network(brain.get_current(), nodes)
+                generate_visualized_network(neato.get_current(), nodes)
 
         # Train the neural network
         if AI:
@@ -218,8 +220,8 @@ def main():
             else:
                 inputs = [0, player.pos[1]/HEIGHT, 0, 0]
 
-            if brain.should_evolve():
-                genome = brain.get_current()
+            if neato.should_evolve():
+                genome = neato.get_current()
                 output = genome.forward(inputs)[0]
                 # print(output)
                 genome.set_fitness(timer)
@@ -239,11 +241,11 @@ def main():
         # Update display and its caption
         display.blit(network_display, (WIDTH, 0))
         pygame.display.set_caption("GNRTN : {0}; SPC : {1}; CRRNT : {2}; FIT : {3}; MXFIT : {4}; OUT : {5} IN : {6}".format(
-                                            brain.get_generation()+1, 
-                                            brain.get_current_species()+1, 
-                                            brain.get_current_genome()+1,
+                                            neato.get_generation()+1, 
+                                            neato.get_current_species()+1, 
+                                            neato.get_current_genome()+1,
                                             timer,
-                                            brain.get_all_time_fittest().get_fitness(),
+                                            neato.get_all_time_fittest().get_fitness(),
                                             round(output, 3),
                                             [round(i, 3) for i in inputs]
         ))

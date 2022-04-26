@@ -136,61 +136,61 @@ def run():
     hidden_layers = 6
     population = 1000
     if os.path.isfile('mountaincar.neat'):
-        brain = NeatO.load('mountaincar')
-        brain._hyperparams = hyperparams
+        neato = NeatO.load('mountaincar')
+        neato._hyperparams = hyperparams
     else:    
-        brain = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
-        brain.initialize()
+        neato = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
+        neato.initialize()
         print(hyperparams.max_fitness)
 
     current_best = None
     print("Training...")
     fitness_history = []
-    while brain.should_evolve():
-        brain.evaluate_parallel(evaluate)
+    while neato.should_evolve():
+        neato.evaluate_parallel(evaluate)
 
         # Print training progress
-        current_gen = brain.get_generation()
-        brain.update_fittest()
-        current_best = brain.get_current_fittest()
-        mean_fitness = brain.get_average_fitness()
-        brain.save_fitness_history()
-        brain.save_max_fitness_history()
+        current_gen = neato.get_generation()
+        neato.update_fittest()
+        current_best = neato.get_current_fittest()
+        mean_fitness = neato.get_average_fitness()
+        neato.save_fitness_history()
+        neato.save_max_fitness_history()
         print(
             "Mean Fitness: {} | Current Accuracy: {} | Species Count: {} | Population count: {} | Current gen: {}".format(
                 mean_fitness,
                 current_best.get_fitness(), 
-                brain.get_species_count(), 
-                brain.get_population(),
+                neato.get_species_count(), 
+                neato.get_population(),
                 current_gen
             )
         )
         sys.stdout.flush()
         print('saving current population')
-        brain.save('mountaincar')
+        neato.save('mountaincar')
         generate_visualized_network(current_best, current_gen)
         # NOTE: I wanted to see intermediate results
         # so saving genome whenever it beats the last best
-        if current_best.get_fitness() >= brain._global_best.get_fitness():
+        if current_best.get_fitness() >= neato._global_best.get_fitness():
             with open(f'mountaincar_best_individual_gen{current_gen}', 'wb') as f:
                 pickle.dump(current_best, f)
-        brain.update_fittest()
+        neato.update_fittest()
         # break
         try:
             plt.figure()
             plt.title('fitness over generations')
-            plt.plot(brain.get_fitness_history(),label='average')
-            plt.plot(brain.get_max_fitness_history(), label='max')
+            plt.plot(neato.get_fitness_history(),label='average')
+            plt.plot(neato.get_max_fitness_history(), label='max')
             plt.legend()
             plt.savefig(f'mountaincar_graphs/progress.png')
             plt.close()
             plt.figure()
-            plt.plot(brain.get_network_history(), label='network size')
+            plt.plot(neato.get_network_history(), label='network size')
             plt.legend()
             plt.savefig(f'mountaincar_graphs/network_progress.png')
             plt.close()
             plt.figure()
-            plt.plot(brain.get_population_history(), label='population size')
+            plt.plot(neato.get_population_history(), label='population size')
             plt.legend()
             plt.savefig(f'mountaincar_graphs/population_progress.png')
             plt.close()
@@ -201,7 +201,7 @@ def run():
 
     print('done')
     with open('mountaincar_best_individual', 'wb') as f:
-        pickle.dump(brain.get_all_time_fittest(), f)
+        pickle.dump(neato.get_all_time_fittest(), f)
     
 
 if __name__ == '__main__':

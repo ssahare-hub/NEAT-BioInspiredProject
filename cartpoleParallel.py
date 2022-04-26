@@ -128,33 +128,33 @@ def run():
     population = 1000
     
     if os.path.isfile('neato_cartpole.neat'):
-            brain = NeatO.load('neato_cartpole')
-            brain._hyperparams = hyperparams
+            neato = NeatO.load('neato_cartpole')
+            neato._hyperparams = hyperparams
     else:    
-            brain = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
-            brain.initialize()
+            neato = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
+            neato.initialize()
             print(hyperparams.max_fitness)
 
     current_best = None
     print("Training...")
-    #while brain.should_evolve():
-    while brain.get_generation() < hyperparams.max_generations:
+    #while neato.should_evolve():
+    while neato.get_generation() < hyperparams.max_generations:
         try:
-            brain.evaluate_parallel(evaluate)
+            neato.evaluate_parallel(evaluate)
 
             # Print training progress
-            current_gen = brain.get_generation()
-            brain.save_fitness_history()
-            brain.save_max_fitness_history()
-            current_best = brain.get_current_fittest()
-            mean_fitness = brain.get_average_fitness()
-            brain.save_network_history(len(current_best.get_connections()))
-            brain.save_population_history()
+            current_gen = neato.get_generation()
+            neato.save_fitness_history()
+            neato.save_max_fitness_history()
+            current_best = neato.get_current_fittest()
+            mean_fitness = neato.get_average_fitness()
+            neato.save_network_history(len(current_best.get_connections()))
+            neato.save_population_history()
             print(
                 "Mean Fitness: {} | Best Gen Fitness: {} | Species Count: {} |  Current gen: {}".format(
                     mean_fitness,
                     current_best.get_fitness(), 
-                    brain.get_species_count(),
+                    neato.get_species_count(),
                     current_gen, 
                 )
             )
@@ -164,18 +164,18 @@ def run():
             print('pre-saving', '-'*100)
             print(e)
         try:
-            brain.save('neato_cartpole')
+            neato.save('neato_cartpole')
         except Exception as e:
-            print("Failed to save current brain:")
+            print("Failed to save current neato:")
             print(e)
         try:
             generate_visualized_network(current_best, current_gen)
             # NOTE: I wanted to see intermediate results
             # so saving genome whenever it beats the last best
-            if current_best.get_fitness() > brain._global_best.get_fitness():
+            if current_best.get_fitness() > neato._global_best.get_fitness():
                 with open(f'cartpole/neato_cartpole_best_individual_gen{current_gen}', 'wb') as f:
                     pickle.dump(current_best, f)
-            brain.update_fittest()
+            neato.update_fittest()
         except Exception as e:
             print('Network', '='*40)
             print(e)
@@ -184,18 +184,18 @@ def run():
         try:
             plt.figure()
             plt.title('fitness over generations')
-            plt.plot(brain.get_fitness_history(),label='average')
-            plt.plot(brain.get_max_fitness_history(), label='max')
+            plt.plot(neato.get_fitness_history(),label='average')
+            plt.plot(neato.get_max_fitness_history(), label='max')
             plt.legend()
             plt.savefig(f'cartpole/cartpole_graphs/progress.png')
             plt.close()
             plt.figure()
-            plt.plot(brain.get_network_history(), label='network size')
+            plt.plot(neato.get_network_history(), label='network size')
             plt.legend()
             plt.savefig(f'cartpole/cartpole_graphs/network_progress.png')
             plt.close()
             plt.figure()
-            plt.plot(brain.get_population_history(), label='population size')
+            plt.plot(neato.get_population_history(), label='population size')
             plt.legend()
             plt.savefig(f'cartpole/cartpole_graphs/population_progress.png')
             plt.close()
@@ -206,7 +206,7 @@ def run():
 
 
     with open('cartpole/neato_cartpole_best_individual', 'wb') as f:
-        pickle.dump(brain._global_best, f)
+        pickle.dump(neato._global_best, f)
 
 if __name__ == '__main__':
     run()

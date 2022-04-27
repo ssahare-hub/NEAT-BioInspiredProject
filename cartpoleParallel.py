@@ -1,33 +1,15 @@
-import multiprocessing
 import os
 import pickle
-
-from collections import defaultdict
 import numpy as np
 import gym
-import math
 import os
 import sys
 import matplotlib.pyplot as plt
-
 from neato.genome import Genome
 sys.path.append('./neato')
-from neato.neato import NeatO
+from neato.neato import NeatO, generate_visualized_network
 from neato.hyperparameters import Hyperparameters, tanh, sigmoid
  
-# Constants
-WIDTH, HEIGHT = 640, 480
-NETWORK_WIDTH = 480
-
-# Flags
-AI = True
-DRAW_NETWORK = True
-
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-YELLOW = (255, 255, 0)
-
 runs_per_net=4
 def evaluate(genome: Genome):
     """Evaluates the current genome."""
@@ -48,67 +30,10 @@ def evaluate(genome: Genome):
     sys.stdout.flush()
     return np.mean(fitnesses)
 
-def generate_visualized_network(genome: Genome, generation):
-    """Generate the positions/colors of the neural network nodes"""
-    nodes = {}
-    fig = plt.figure(figsize=(12, 12))
-    ax = fig.gca()
-    ax.axis('off')
-    plt.title(f'Best Genome with fitness {genome.get_fitness()} Network')
-    _nodes = genome.get_nodes()
-    layer_count = defaultdict(lambda: -1 * genome._inputs)
-    index = {}
-    max_nodes_per_layer = genome._inputs
-    for n in _nodes:
-        layer_count[_nodes[n].layer] += 1
-        if layer_count[_nodes[n].layer] == 0:
-            layer_count[_nodes[n].layer] += 1
-        index[n] = layer_count[_nodes[n].layer]
-        max_nodes_per_layer = max( max_nodes_per_layer, layer_count[_nodes[n].layer] + genome._inputs )
-    for number in _nodes:
-        if genome.is_input(number):
-            color = 'blue'
-            x = 0.05*NETWORK_WIDTH
-            y = HEIGHT/4 + HEIGHT/5 * number
-        elif genome.is_output(number):
-            color = 'red'
-            x = NETWORK_WIDTH-0.05*NETWORK_WIDTH
-            y = HEIGHT/2
-        else:
-            color = 'black'
-            x = NETWORK_WIDTH/10 + NETWORK_WIDTH/12 * _nodes[number].layer
-            t = max( (layer_count[_nodes[number].layer]) * 2.5, max_nodes_per_layer)
-            y = HEIGHT/2 + (HEIGHT / t) * index[number]
-        nodes[number] = [(x, y), color]
-
-    genes = genome.get_connections()
-    sorted_innovations = sorted(genes.keys())
-    for innovation in sorted_innovations:
-        connection = genes[innovation]
-        i, j = connection.in_node.number, connection.out_node.number
-        if connection.enabled:
-            color = 'green'
-        else:
-            color = 'red'
-        x_values = [nodes[i][0][0], nodes[j][0][0]]
-        y_values = [nodes[i][0][1], nodes[j][0][1]]
-        ax.plot(x_values, y_values, color=color)
-
-
-    for n in nodes:
-        circle = plt.Circle(nodes[n][0], 5, color=nodes[n][1])
-        ax.add_artist(circle)
-    if not os.path.exists('cartpole/cartpole_graphs'):
-        os.makedirs('cartpole/cartpole_graphs')
-    plt.savefig(f'cartpole/cartpole_graphs/{generation}._network.png')
-    plt.close(fig)
-    # plt.show()
-
 def run():
 
     hyperparams = Hyperparameters()
     hyperparams.default_activation = sigmoid
-    #hyperparams.max_generations = 300
     hyperparams.delta_threshold = 3
     hyperparams.mutation_probabilities['node'] = 0.2
     hyperparams.mutation_probabilities['connection'] = 0.2
@@ -128,12 +53,12 @@ def run():
     population = 500
     
     if os.path.isfile('neato_cartpole.neat'):
-            neato = NeatO.load('neato_cartpole')
-            neato._hyperparams = hyperparams
+        neato = NeatO.load('neato_cartpole')
+        neato._hyperparams = hyperparams
     else:    
-            neato = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
-            neato.initialize()
-            print(hyperparams.max_fitness)
+        neato = NeatO(inputs, outputs, hidden_layers, population, hyperparams)
+        neato.initialize()
+        print(hyperparams.max_fitness)
 
     if not os.path.exists('cartpole'):
         os.makedirs('cartpole')
@@ -141,18 +66,14 @@ def run():
     current_best = None
     print("Training...")
     while neato.should_evolve():
-    # while neato.get_generation() < hyperparams.max_generations:
         try:
             neato.evaluate_parallel(evaluate)
 
             # Print training progress
             current_gen = neato.get_generation()
-            neato.save_fitness_history()
-            neato.save_max_fitness_history()
             current_best = neato.get_current_fittest()
-            mean_fitness = neato.get_average_fitness()
-            neato.save_network_history(len(current_best.get_connections()))
-            neato.save_population_history()
+            
+            mean_fitness = neato.get_fitness_history()[-1]
             print(
                 "Mean Fitness: {} | Best Gen Fitness: {} | Species Count: {} |  Current gen: {}".format(
                     mean_fitness,
@@ -172,11 +93,15 @@ def run():
             print("Failed to save current neato:")
             print(e)
         try:
-            generate_visualized_network(current_best, current_gen)
+            generate_visualized_network(current_best, current_gen, 'cartpole/cartpole_graphs')
             # NOTE: I wanted to see intermediate results
             # so saving genome whenever it beats the last best
+            if not os.path.exists('cartpole'):
+                os.makedirs('cartpole')
+            if not os.path.exists('cartpole/models'):
+                os.makedirs('cartpole/models')
             if current_best.get_fitness() > neato._global_best.get_fitness():
-                with open(f'cartpole/neato_cartpole_best_individual_gen{current_gen}', 'wb') as f:
+                with open(f'cartpole/models/neato_cartpole_gen{current_gen}', 'wb') as f:
                     pickle.dump(current_best, f)
             neato.update_fittest()
         except Exception as e:
@@ -189,18 +114,19 @@ def run():
             plt.title('fitness over generations')
             plt.plot(neato.get_fitness_history(),label='average')
             plt.plot(neato.get_max_fitness_history(), label='max')
+            plt.axhline(y=hyperparams.max_fitness, color='red', linestyle='-', label='desired max fitness')
             plt.legend()
-            plt.savefig(f'cartpole/cartpole_graphs/progress.png')
+            plt.savefig(f'cartpole/graphs/progress.png')
             plt.close()
             plt.figure()
             plt.plot(neato.get_network_history(), label='network size')
             plt.legend()
-            plt.savefig(f'cartpole/cartpole_graphs/network_progress.png')
+            plt.savefig(f'cartpole/graphs/network_progress.png')
             plt.close()
             plt.figure()
             plt.plot(neato.get_population_history(), label='population size')
             plt.legend()
-            plt.savefig(f'cartpole/cartpole_graphs/population_progress.png')
+            plt.savefig(f'cartpole/graphs/population_progress.png')
             plt.close()
         except Exception as e:
             print('progress plots', '='*40)

@@ -1,5 +1,8 @@
+import os
 import pickle
 import multiprocessing as mp
+
+from matplotlib import pyplot as plt
 from .genome import *
 from .hyperparameters import *
 from .connection_history import *
@@ -221,9 +224,13 @@ class NeatO(object):
 
         pool.close()
         pool.join()
+        self.save_fitness_history()
+        self.save_max_fitness_history()
+        self.save_population_history()
         if self.should_evolve():
             self.evolve()
-        # self.evolve()
+        current_best = self.get_current_fittest()
+        self.save_network_history(len(current_best.get_connections()))
 
     def get_all_time_fittest(self):
         """Return the genome with the highest global fitness score."""
@@ -262,7 +269,7 @@ class NeatO(object):
                 if genome.get_fitness() != 0:
                     fitnesses.append(genome.get_fitness())
         if not fitnesses:
-            return 0
+            return -1
         return np.mean(fitnesses)
 
     def get_maximum_fitness(self):
@@ -341,3 +348,61 @@ def genomic_distance(a: Node, b: Node, distance_weights: dict):
     t3 = distance_weights['weight'] * weight_diff/len(matching_connections)
     t4 = distance_weights['bias'] * bias_diff/num_min_nodes
     return t1 + t3 + t2 # t4 
+
+def generate_visualized_network(genome: Genome, generation, path, NETWORK_WIDTH=480, HEIGHT=480):
+    """Generate the positions/colors of the neural network nodes"""
+    nodes = {}
+    fig = plt.figure(figsize=(12, 12))
+    ax = fig.gca()
+    ax.axis('off')
+    plt.title(f'Best Genome with fitness {genome.get_fitness()} Network')
+    _nodes = genome.get_nodes()
+    layer_count = defaultdict(lambda: -1 * genome._inputs)
+    index = {}
+    max_nodes_per_layer = genome._inputs
+    for n in _nodes:
+        layer_count[_nodes[n].layer] += 1
+        if layer_count[_nodes[n].layer] == 0:
+            layer_count[_nodes[n].layer] += 1
+        index[n] = layer_count[_nodes[n].layer]
+        max_nodes_per_layer = max( max_nodes_per_layer, layer_count[_nodes[n].layer] + genome._inputs )
+    for number in _nodes:
+        if genome.is_input(number):
+            color = 'blue'
+            x = 0.05*NETWORK_WIDTH
+            y = HEIGHT/4 + HEIGHT/5 * number
+        elif genome.is_output(number):
+            color = 'red'
+            x = NETWORK_WIDTH-0.05*NETWORK_WIDTH
+            y = HEIGHT/2
+        else:
+            color = 'black'
+            x = NETWORK_WIDTH/10 + NETWORK_WIDTH/12 * _nodes[number].layer
+            t = max( (layer_count[_nodes[number].layer]) * 2.5, max_nodes_per_layer)
+            y = HEIGHT/2 + (HEIGHT / t) * index[number]
+        nodes[number] = [(x, y), color]
+
+    genes = genome.get_connections()
+    sorted_innovations = sorted(genes.keys())
+    for innovation in sorted_innovations:
+        connection = genes[innovation]
+        i, j = connection.in_node.number, connection.out_node.number
+        if connection.enabled:
+            color = 'green'
+        else:
+            color = 'red'
+        x_values = [nodes[i][0][0], nodes[j][0][0]]
+        y_values = [nodes[i][0][1], nodes[j][0][1]]
+        ax.plot(x_values, y_values, color=color)
+
+    for n in nodes:
+        circle = plt.Circle(nodes[n][0], 5, color=nodes[n][1])
+        ax.add_artist(circle)
+    network_path = os.path.join(path,'networks')
+    if not os.path.exists(path):
+        os.makedirs(path)
+    if not os.path.exists(network_path):
+        os.makedirs(network_path)
+    file_path = os.path.join(network_path, f'{generation}_network.png') 
+    plt.savefig(file_path)
+    plt.close()

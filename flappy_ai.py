@@ -1,9 +1,11 @@
 # A Flappy Bird clone that learns to play Flappy Bird
 # This is a simple demonstration of the capabilities of the NEAT algorithm
 # Requires Pygame to run
+import pickle
 import sys
 import os
 import random
+from matplotlib import pyplot as plt
 import pygame
 from pygame.locals import *
 
@@ -151,12 +153,11 @@ def main():
     ahead = []
 
     hyperparams = Hyperparameters()
-    hyperparams.delta_threshold = 2
+    hyperparams.delta_threshold = 0.75
 
     hyperparams.mutation_probabilities['node'] = 0.05
     hyperparams.mutation_probabilities['connection'] = 0.05
-    hyperparams.mutation_probabilities['weight_perturb'] = 0.1
-    hyperparams.mutation_probabilities['mutate'] = 0.3
+    hyperparams.mutation_probabilities['mutate'] = 0.5
     # Load the bird's neato
     if os.path.isfile('flappy_bird.neat'):
         neato = NeatO.load('flappy_bird')
@@ -170,7 +171,7 @@ def main():
     output = 0
     nodes = {}
     generate_visualized_network(neato.get_current(), nodes)
-
+    last_gen = 1
     while True:
         display.fill(BLUE)
         network_display.fill(WHITE)
@@ -230,6 +231,36 @@ def main():
                 if DRAW_NETWORK:
                     render_visualized_network(genome, nodes, network_display)
 
+        current_gen = neato.get_generation()
+        if current_gen > last_gen:
+            last_gen = current_gen    
+            current_best = neato.get_current_fittest()
+            neato.save_fitness_history()
+            neato.save_max_fitness_history()
+            mean_fitness = neato.get_average_fitness()
+            neato.save_network_history(len(current_best.get_connections()))
+            neato.save_population_history()
+            if current_best.get_fitness() > neato._global_best.get_fitness():
+                with open(f'flappy_ai/neato_flappy_ai_best_individual_gen{current_gen}', 'wb') as f:
+                    pickle.dump(current_best, f)
+            plt.figure()
+            plt.title('fitness over generations')
+            plt.plot(neato.get_fitness_history(),label='average')
+            plt.plot(neato.get_max_fitness_history(), label='max')
+            plt.legend()
+            plt.savefig(f'flappy_ai/flappy_ai_graphs/progress.png')
+            plt.close()
+            plt.figure()
+            plt.plot(neato.get_network_history(), label='network size')
+            plt.legend()
+            plt.savefig(f'flappy_ai/flappy_ai_graphs/network_progress.png')
+            plt.close()
+            plt.figure()
+            plt.plot(neato.get_population_history(), label='population size')
+            plt.legend()
+            plt.savefig(f'flappy_ai/flappy_ai_graphs/population_progress.png')
+            plt.close()
+
         # Handle user events events
         for e in pygame.event.get():
             if e.type == QUIT:
@@ -250,6 +281,7 @@ def main():
                                             [round(i, 3) for i in inputs]
         ))
         pygame.display.update()
+        
 
         # Uncomment this to cap the framerate
         # clock.tick(1000)

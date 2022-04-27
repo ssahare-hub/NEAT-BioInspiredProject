@@ -36,7 +36,7 @@ def evaluate(genome:Genome):
     """Evaluates the current genome."""
     try:
         fitnesses = []
-        for i in range(5):
+        for i in range(10):
             env = gym.make("Pendulum-v1")
             env._max_episode_steps = EPISODE_DURATION
             last_observation = env.reset()
@@ -46,7 +46,11 @@ def evaluate(genome:Genome):
                 action = genome.forward(last_observation)[0]
                 next_observation, reward, done, info = env.step([action * 2])
                 # reward = np.exp(-1*(next_observation[0]-1)*(next_observation[0]-1)/0.001)-100*np.abs(10*0.5 - (10*0.5*next_observation[0] + 0.5*0.3333*next_observation[2] * next_observation[2])) + 100*np.abs(10*0.5 - (10*0.5*last_observation[0] + 0.5*0.3333*last_observation[2] * last_observation[2]))
-                fitness += reward
+                # fitness += reward
+                encourage_vertical = (next_observation[0] + 1) ** 2
+                discourage_horizontal = (abs(next_observation[1]) - 1) ** 2
+                discourage_speed = action ** 2
+                fitness += (reward + encourage_vertical - discourage_horizontal - discourage_speed)
                 last_observation = next_observation
             fitnesses.append(fitness)
         sys.stdout.flush()
@@ -106,9 +110,11 @@ def generate_visualized_network(genome: Genome, generation):
     for n in nodes:
         circle = plt.Circle(nodes[n][0], 5, color=nodes[n][1])
         ax.add_artist(circle)
-    if not os.path.exists('pendulum/pendulum_graphs'):
+    if not os.path.exists('pendulum/pendulum_graphs/'):
         os.makedirs('pendulum/pendulum_graphs')
-    plt.savefig(f'pendulum/pendulum_graphs/{generation}._network.png')
+    if not os.path.exists('pendulum/pendulum_graphs/networks'):
+        os.makedirs('pendulum/pendulum_graphs/networks')
+    plt.savefig(f'pendulum/pendulum_graphs/networks/{generation}._network.png')
     plt.close()
 
 
@@ -117,24 +123,24 @@ def run():
     hyperparams = Hyperparameters()
     #hyperparams.max_generations = 300
     hyperparams.default_activation = tanh
-    hyperparams.delta_threshold = 2
+    hyperparams.delta_threshold = 3
     hyperparams.mutation_probabilities['node'] = 0.2
     hyperparams.mutation_probabilities['connection'] = 0.2
-    hyperparams.mutation_probabilities['mutate'] = 0.75
+    hyperparams.mutation_probabilities['mutate'] = 0.3
     hyperparams.mutation_probabilities['weight_perturb'] = 0.8
     hyperparams.mutation_probabilities['weight_set'] = 0.01
-    hyperparams.mutation_probabilities['bias_perturb'] = 0.8
-    hyperparams.mutation_probabilities['bias_set'] = 0.01
+    hyperparams.mutation_probabilities['bias_perturb'] = 0.7
+    hyperparams.mutation_probabilities['bias_set'] = 0.00
     hyperparams.mutation_probabilities['re-enable'] = 0.01
-    hyperparams.fitness_offset = 0 * EPISODE_DURATION
-    hyperparams.max_fitness = 8000
-    hyperparams.max_generations = 300
-    hyperparams.survival_percentage = 0.50
+    hyperparams.fitness_offset = 1000
+    hyperparams.max_fitness = 2000
+    hyperparams.max_generations = 100
+    hyperparams.survival_percentage = 0.25
 
     inputs = 3
     outputs = 1
     hidden_layers = 12
-    population = 300
+    population = 1000
     if os.path.isfile('neato_pendulum.neat'):
         neato = NeatO.load('neato_pendulum')
         neato._hyperparams = hyperparams
@@ -179,10 +185,7 @@ def run():
             print(e)
         try:
             generate_visualized_network(current_best, current_gen)
-            # NOTE: I wanted to see intermediate results
-            # so saving genome whenever it beats the last best
-            if current_best.get_fitness() > neato._global_best.get_fitness():
-                with open(f'pendulum/neato_pendulum_best_individual_gen{current_gen}', 'wb') as f:
+            with open(f'pendulum/models/neato_pendulum_{current_gen}_{abs(round(current_best.get_fitness()))}', 'wb') as f:
                     pickle.dump(current_best, f)
             neato.update_fittest()
         except Exception as e:

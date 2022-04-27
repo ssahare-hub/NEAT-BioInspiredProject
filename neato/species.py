@@ -28,13 +28,12 @@ class Species(object):
 
         if choice == "asexual" or len(self._members) == 1:
             child = random.choice(self._members).clone()
-            # child.mutate(hyperparams)
+            child.mutate(hyperparams)
         elif choice == "sexual":
             (mom, dad) = random.sample(self._members, 2)
-            child = genomic_crossover(mom, dad)
-
-        if random.random() <= mutation_probabilities['mutate']:
-            child.mutate(hyperparams)
+            child = genomic_crossover(mom, dad)    
+            if random.random() <= mutation_probabilities['mutate']:
+                child.mutate(hyperparams)
         return child
 
     def update_fitness(self) -> None:
@@ -47,17 +46,13 @@ class Species(object):
         if len(self._fitness_history) > self._max_fitness_history:
             self._fitness_history.pop(0)
 
-    def cull_genomes(self, fittest_only: bool, survival_percentage: int) -> None:
+    def cull_genomes(self, fittest_only: bool, survival_percentage: float) -> None:
         """Rank genome in species and eliminate the least fit individuals"""
         self._members.sort(key=lambda g: g._fitness, reverse=True)
-        if fittest_only:
-            # Only keep the winning genome
-            remaining = 1
-        else:
-            # Keep top 25%
-            remaining = int(math.ceil(survival_percentage*len(self._members)))
 
-        self._members = self._members[:remaining]
+        # keep the top percentage
+        survivor_count = int(math.ceil(survival_percentage*len(self._members)))
+        self._members = self._members[:survivor_count]
 
     def get_best(self) -> Node:
         """Get the member with the highest fitness score."""

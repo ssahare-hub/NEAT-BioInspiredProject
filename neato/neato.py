@@ -270,7 +270,10 @@ class NeatO(object):
         fitnesses = []
         for s in self._species:
             for genome in s._members:
-                fitnesses.append(genome.get_fitness())
+                if genome.get_fitness() != 0:
+                    fitnesses.append(genome.get_fitness())
+        if not fitnesses:
+            return -1
         return np.max(fitnesses)
 
     def save(self, filename: str):

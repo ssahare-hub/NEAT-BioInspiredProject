@@ -126,16 +126,29 @@ class NeatO(object):
 
             # print('Repopulating')
             # Repopulate
+            Children = []
             for i, s in enumerate(self._species):
                 ratio = s._fitness_sum/global_fitness_sum
                 diff = self._population - self.get_population()
-                offspring = int(round(ratio * diff))
+                # offspring = int(round(ratio * diff))
+                # for j in range(offspring):
+                #     self.speciation(
+                #         s.breed(
+                #             self._hyperparams
+                #         )
+                #     )
+
+                # NOTE: to have a fixed population size instead
+                offspring = int(round(ratio * self._population))
+                
+                
                 for j in range(offspring):
-                    self.speciation(
-                        s.breed(
-                            self._hyperparams
-                        )
-                    )
+                    Children.append(s.breed(self._hyperparams))
+
+            self._species = []
+            for child in Children:
+                self.speciation(child)
+            # end for changes to have a fixed population size
 
             # No species survived
             # Repopulate using mutated minimal structures and global best
@@ -160,7 +173,7 @@ class NeatO(object):
         based on the maximum fitness and generation count.
         """
         self.update_fittest()
-        fit = self._global_best._fitness <= self._hyperparams.max_fitness
+        fit = self._global_best._fitness < self._hyperparams.max_fitness
         # print(self._global_best._fitness,self._hyperparams.max_fitness)
         end = self._generation != self._hyperparams.max_generations
 
@@ -208,7 +221,9 @@ class NeatO(object):
 
         pool.close()
         pool.join()
-        self.evolve()
+        if self.should_evolve():
+            self.evolve()
+        # self.evolve()
 
     def get_all_time_fittest(self):
         """Return the genome with the highest global fitness score."""

@@ -109,7 +109,7 @@ def run():
     hyperparams = Hyperparameters()
     hyperparams.default_activation = sigmoid
     #hyperparams.max_generations = 300
-    hyperparams.delta_threshold = 1.2
+    hyperparams.delta_threshold = 3
     hyperparams.mutation_probabilities['node'] = 0.2
     hyperparams.mutation_probabilities['connection'] = 0.2
     hyperparams.mutation_probabilities['mutate'] = 0.2
@@ -118,14 +118,14 @@ def run():
     hyperparams.mutation_probabilities['bias_perturb'] = 0.7
     hyperparams.mutation_probabilities['bias_set'] = 0.00
     hyperparams.mutation_probabilities['re-enable'] = 0.01
-    hyperparams.survival_percentage = 0.2
-    hyperparams.max_fitness = 949
+    hyperparams.survival_percentage = 0.25
+    hyperparams.max_fitness = 950
     hyperparams.max_generations = 100
 
     inputs = 4
     outputs = 1
     hidden_layers = 6
-    population = 1000
+    population = 500
     
     if os.path.isfile('neato_cartpole.neat'):
             neato = NeatO.load('neato_cartpole')
@@ -135,10 +135,13 @@ def run():
             neato.initialize()
             print(hyperparams.max_fitness)
 
+    if not os.path.exists('cartpole'):
+        os.makedirs('cartpole')
+
     current_best = None
     print("Training...")
-    #while neato.should_evolve():
-    while neato.get_generation() < hyperparams.max_generations:
+    while neato.should_evolve():
+    # while neato.get_generation() < hyperparams.max_generations:
         try:
             neato.evaluate_parallel(evaluate)
 

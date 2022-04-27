@@ -4,6 +4,9 @@ import warnings
 import graphviz
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import time
+os.environ["PATH"] += os.pathsep + "C:/Users/mrelm/miniconda3/Library/bin/graphviz"
 
 
 def plot_stats(statistics, ylog=False, view=False, filename='avg_fitness.svg'):
@@ -187,6 +190,7 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
             dot.edge(a, b, _attributes={'style': style, 'color': color, 'penwidth': width})
 
     dot.render(filename, view=view)
+    time.sleep(1)
 
     return dot
 

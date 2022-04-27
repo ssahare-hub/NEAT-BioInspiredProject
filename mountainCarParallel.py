@@ -114,20 +114,21 @@ def run():
 
     hyperparams = Hyperparameters()
     hyperparams.default_activation = tanh
-    hyperparams.delta_threshold = 2
+    hyperparams.delta_threshold = 3.85
     hyperparams.mutation_probabilities['node'] = 0.2
     hyperparams.mutation_probabilities['connection'] = 0.2
     hyperparams.mutation_probabilities['mutate'] = 0.75
     hyperparams.mutation_probabilities['weight_perturb'] = 0.8
-    hyperparams.mutation_probabilities['weight_set'] = 0.01
+    hyperparams.mutation_probabilities['weight_set'] = 0.1
     hyperparams.mutation_probabilities['bias_perturb'] = 0.8
-    hyperparams.mutation_probabilities['bias_set'] = 0.01
+    hyperparams.mutation_probabilities['bias_set'] = 0.1
     hyperparams.mutation_probabilities['re-enable'] = 0.01
     hyperparams.perturbation_range['weight_perturb_max'] = 2
     hyperparams.perturbation_range['weight_perturb_min'] = -2
+    hyperparams.survival_percentage = 0.2
 
-    hyperparams.fitness_offset = 0
-    hyperparams.max_fitness = hyperparams.fitness_offset+0.7029
+    hyperparams.fitness_offset = 10
+    hyperparams.max_fitness = hyperparams.fitness_offset+0.703
     hyperparams.max_generations = 300
     hyperparams.distance_weights['matching_connections'] = 0.75
 
@@ -156,6 +157,8 @@ def run():
         mean_fitness = neato.get_average_fitness()
         neato.save_fitness_history()
         neato.save_max_fitness_history()
+        neato.save_population_history()
+        neato.save_network_history()
         print(
             "Mean Fitness: {} | Current Accuracy: {} | Species Count: {} | Population count: {} | Current gen: {}".format(
                 mean_fitness,
@@ -171,8 +174,10 @@ def run():
         generate_visualized_network(current_best, current_gen)
         # NOTE: I wanted to see intermediate results
         # so saving genome whenever it beats the last best
+        if not os.path.exists('mountain_car/MountainCar_Best_in_Gen'):
+            os.makedirs('mountain_car/MountainCar_Best_in_Gen')
         if current_best.get_fitness() >= neato._global_best.get_fitness():
-            with open(f'mountaincar_best_individual_gen{current_gen}', 'wb') as f:
+            with open(f'mountain_car/MountainCar_Best_in_Gen/mountaincar_best_individual_gen{current_gen}', 'wb') as f:
                 pickle.dump(current_best, f)
         neato.update_fittest()
         # break

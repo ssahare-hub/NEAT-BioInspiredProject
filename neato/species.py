@@ -28,6 +28,7 @@ class Species(object):
 
         if choice == "asexual" or len(self._members) == 1:
             child = random.choice(self._members).clone()
+            # child.mutate(hyperparams)
         elif choice == "sexual":
             (mom, dad) = random.sample(self._members, 2)
             child = genomic_crossover(mom, dad)

@@ -19,18 +19,6 @@ from neato.hyperparameters import Hyperparameters, tanh
 
 EPISODE_DURATION = 200
  
-# Constants
-WIDTH, HEIGHT = 640, 480
-NETWORK_WIDTH = 480
-
-# Flags
-AI = True
-DRAW_NETWORK = True
-
-# Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-YELLOW = (255, 255, 0)
 
 def evaluate(genome:Genome):
     """Evaluates the current genome."""

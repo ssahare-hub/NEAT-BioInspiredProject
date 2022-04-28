@@ -4,7 +4,7 @@
 # or the experiment itself.  This is the only required section.
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 0.7029
+fitness_threshold     = 0.703
 pop_size              = 1000
 reset_on_extinction   = 0
 
@@ -29,7 +29,7 @@ aggregation_mutate_rate = 0.0
 bias_init_mean          = 0.0
 bias_init_stdev         = 1.0
 bias_replace_rate       = 0.1
-bias_mutate_rate        = 0.7
+bias_mutate_rate        = 0.8
 bias_mutate_power       = 0.5
 bias_max_value          = 1
 bias_min_value          = -1
@@ -52,7 +52,7 @@ enabled_default         = True
 enabled_mutate_rate     = 0.01
 
 [DefaultSpeciesSet]
-compatibility_threshold = 3.75
+compatibility_threshold = 3.85
 
 [DefaultStagnation]
 species_fitness_func = max

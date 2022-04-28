@@ -15,7 +15,7 @@ class Species(object):
         self._fitness_sum = 0
         self._max_fitness_history = max_fitness_history
 
-    def breed(self, hyperparams: Hyperparameters) -> Node:
+    def reproduce(self, hyperparams: Hyperparameters) -> Node:
         """Genrate and return offspring (child) either through cloning or crossover 
         followed by mutation.
         """
@@ -28,11 +28,14 @@ class Species(object):
 
         if choice == "asexual" or len(self._members) == 1:
             child = random.choice(self._members).clone()
-            child.mutate(hyperparams)
+            # child.mutate(hyperparams)
         elif choice == "sexual":
             (mom, dad) = random.sample(self._members, 2)
             child = genomic_crossover(mom, dad)    
-            if random.random() <= mutation_probabilities['mutate']:
+            # if random.random() <= mutation_probabilities['mutate']:
+            #     child.mutate(hyperparams)
+
+        if random.random() <= mutation_probabilities['mutate']:
                 child.mutate(hyperparams)
         return child
 
@@ -46,7 +49,7 @@ class Species(object):
         if len(self._fitness_history) > self._max_fitness_history:
             self._fitness_history.pop(0)
 
-    def cull_genomes(self, fittest_only: bool, survival_percentage: float) -> None:
+    def ranked_selection(self, survival_percentage: float) -> None:
         """Rank genome in species and eliminate the least fit individuals"""
         self._members.sort(key=lambda g: g._fitness, reverse=True)
 
@@ -70,7 +73,7 @@ def genomic_crossover(a: Genome, b: Genome) -> Genome:
     Genomic crossover of two networks
     """
     # Template genome for child
-    child = Genome(a.connection_history, a._default_activation)
+    child = Genome(a.genmoic_history, a._default_activation)
     a_in = set(a._connections)
     b_in = set(b._connections)
     matching_connections = a_in & b_in

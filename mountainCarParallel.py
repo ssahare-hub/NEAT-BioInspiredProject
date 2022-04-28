@@ -49,7 +49,7 @@ def run():
     hyperparams.perturbation_range['weight_perturb_min'] = -2
     hyperparams.survival_percentage = 0.2
 
-    hyperparams.fitness_offset = 10
+    hyperparams.fitness_offset = 0
     hyperparams.max_fitness = hyperparams.fitness_offset+0.703
     hyperparams.max_generations = 300
     hyperparams.distance_weights['matching_connections'] = 0.75

@@ -5,7 +5,7 @@ import multiprocessing as mp
 from matplotlib import pyplot as plt
 from .genome import *
 from .hyperparameters import *
-from .connection_history import *
+from .genomic_history import *
 from .species import *
 from tqdm import tqdm
 
@@ -18,7 +18,7 @@ class NeatO(object):
         self._inputs = inputs
         self._outputs = outputs
         self._hidden_layers = hidden_layers
-        self._connection_history = ConnectionHistory(
+        self._genomic_history = GenomicHistory(
             inputs, outputs, hidden_layers)
 
         self._species: List[Species] = []
@@ -40,7 +40,7 @@ class NeatO(object):
     def initialize(self):
         """Generate the initial population of genomes."""
         for _ in range(self._population):
-            g = Genome(self._connection_history,
+            g = Genome(self._genomic_history,
                        self._hyperparams.default_activation)
             g.create_network()
             self.speciation(g)
@@ -123,9 +123,9 @@ class NeatO(object):
             self._species = surviving_species
 
             # print('Culling low performing genomes')
-            # Eliminate lowest performing genomes per Species
+            # Rank and eliminate lowest performing genomes per Species
             for s in self._species:
-                s.cull_genomes(False,self._hyperparams.survival_percentage)
+                s.ranked_selection(self._hyperparams.survival_percentage)
 
             # print('Repopulating')
             # Repopulate
@@ -133,7 +133,8 @@ class NeatO(object):
             for i, s in enumerate(self._species):
                 ratio = s._fitness_sum/global_fitness_sum
                 diff = self._population - self.get_population()
-                # offspring = int(round(ratio * diff))
+                # # offspring = int(round(ratio * diff))
+                # offspring = int(round(ratio * self._population))
                 # for j in range(offspring):
                 #     self.speciation(
                 #         s.breed(
@@ -141,12 +142,12 @@ class NeatO(object):
                 #         )
                 #     )
 
-                # NOTE: to have a fixed population size instead
+            #     # NOTE: to have a fixed population size instead
                 offspring = int(round(ratio * self._population))
                 
                 
                 for j in range(offspring):
-                    Children.append(s.breed(self._hyperparams))
+                    Children.append(s.reproduce(self._hyperparams))
 
             self._species = []
             for child in Children:
@@ -163,7 +164,7 @@ class NeatO(object):
                     if i % 3 != 0:
                         g = self._global_best.clone()
                     else:
-                        g = Genome(self._connection_history,
+                        g = Genome(self._genomic_history,
                                    self._hyperparams.default_activation, 
                                    True)
                     g.mutate(self._hyperparams)
@@ -229,6 +230,9 @@ class NeatO(object):
         self.save_population_history()
         if self.should_evolve():
             self.evolve()
+        else:
+            self._current_fittest = self.find_current_fittest()
+            self._generation += 1
         current_best = self.get_current_fittest()
         self.save_network_history(len(current_best.get_connections()))
 

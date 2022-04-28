@@ -5,7 +5,7 @@ import numpy as np
 import random
 import copy
 import itertools
-from .connection_history import *
+from .genomic_history import *
 from .node import *
 from .connection import *
 from .hyperparameters import *
@@ -14,15 +14,15 @@ from .hyperparameters import *
 class Genome(object):
     """ Genome object consists of all information about the genome including the neural network, fitness, and activation function.   """
     def __init__(self, 
-        connection_history: ConnectionHistory, 
+        genmoic_history: GenomicHistory, 
         default_activation: Callable, 
         willCreate: bool = False
     ):
-        self.connection_history = connection_history
-        self._inputs = connection_history.inputs
-        self._outputs = connection_history.outputs
-        self._unhidden = connection_history.inputs + connection_history.outputs
-        self._hidden_layers = connection_history.hidden_layers
+        self.genmoic_history = genmoic_history
+        self._inputs = genmoic_history.inputs
+        self._outputs = genmoic_history.outputs
+        self._unhidden = genmoic_history.inputs + genmoic_history.outputs
+        self._hidden_layers = genmoic_history.hidden_layers
 
         self._default_activation = default_activation
 
@@ -89,7 +89,7 @@ class Genome(object):
         new_connection = Connection(n1, n2, weight)
 
         # Checks if this connection exists in the connection history of all genomes
-        old_connection = self.connection_history.connection_exists(n1, n2)
+        old_connection = self.genmoic_history.connection_exists(n1, n2)
         if old_connection:
             # if it does, assigns the same innovation number
             new_connection.innovation = old_connection.innovation
@@ -99,14 +99,14 @@ class Genome(object):
         else:
             # the new connection is not in the connection history
             # hence assign a new innovation number to this connection
-            new_connection.innovation = self.connection_history.global_innovation_count
-            self.connection_history.global_innovation_count += 1
+            new_connection.innovation = self.genmoic_history.global_innovation_count
+            self.genmoic_history.global_innovation_count += 1
 
             # Add it to dict of all connection
             self._connections[new_connection.innovation] = new_connection
 
             # Add it to the connection history
-            self.connection_history.allConnections.append(new_connection)
+            self.genmoic_history.allConnections.append(new_connection)
 
             # add a new incoming connection to the node
             n2.inConnections.append(new_connection)
@@ -203,7 +203,7 @@ class Genome(object):
         connection.enabled = False
 
         
-        old_node = self.connection_history.node_exists(self._total_nodes)
+        old_node = self.genmoic_history.node_exists(self._total_nodes)
         if old_node:
             new_node = old_node
             
@@ -215,7 +215,7 @@ class Genome(object):
                 new_node_number, new_node_layer, self._default_activation)
         self._nodes[new_node.number] = new_node
         self._total_nodes += 1
-        self.connection_history.allNodes.append(new_node)
+        self.genmoic_history.allNodes.append(new_node)
         self.add_connection(connection.in_node.number, new_node.number, 1.0)
         self.add_connection(
             new_node.number, connection.out_node.number, connection.weight)

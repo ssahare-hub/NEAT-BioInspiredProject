@@ -2,7 +2,7 @@ from typing import List
 from .connection import *
 from .node import *
 
-class ConnectionHistory(object):
+class GenomicHistory(object):
     """ This object tracks all the connections added at the global level """
     def __init__(self, inputs: int, outputs: int, hidden_layers: int):
         self.inputs = inputs

@@ -11,7 +11,7 @@ sys.path.append('./neato')
 from neato.genome import *
 from neato.species import *
 from neato.hyperparameters import *
-from neato.connection_history import *
+from neato.genomic_history import *
 
 # Constants
 WIDTH, HEIGHT = 640, 680
@@ -70,7 +70,7 @@ def main():
     hyperparameters = Hyperparameters()
     
     default_activation = hyperparameters.default_activation
-    ch = ConnectionHistory(4,1,9)
+    ch = GenomicHistory(4,1,9)
     g = Genome(ch,default_activation,True)
     g2 = Genome(ch,default_activation,True)
     

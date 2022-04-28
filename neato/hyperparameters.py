@@ -39,7 +39,7 @@ class Hyperparameters(object):
 
         self.survival_percentage = 0.45
 
-        self.breed_probabilities = {
+        self.reproduce_probabilities = {
             'asexual': 0.5,
             'sexual': 0.5
         }

@@ -20,7 +20,7 @@ class Species(object):
         followed by mutation.
         """
         mutation_probabilities = hyperparams.mutation_probabilities
-        breed_probabilities = hyperparams.breed_probabilities
+        breed_probabilities = hyperparams.reproduce_probabilities
         # Either mutate a clone or breed two random genomes
         population = list(breed_probabilities.keys())
         probabilities = [breed_probabilities[k] for k in population]

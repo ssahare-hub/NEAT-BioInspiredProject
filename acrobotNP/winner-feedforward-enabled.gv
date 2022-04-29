@@ -33,7 +33,6 @@ digraph {
 	-5 -> control [color=green penwidth=0.30999985831861676 style=solid]
 	-5 -> 497 [color=green penwidth=0.33959488550969585 style=solid]
 	502 -> control [color=red penwidth=0.6006719201679594 style=solid]
-	dtheta -> 499 [color=green penwidth=0.5141534822228948 style=dotted]
 	499 -> control [color=green penwidth=0.4489591385370182 style=solid]
 	theta -> 500 [color=red penwidth=0.40403574407440457 style=solid]
 	496 -> control [color=green penwidth=0.2029008904434143 style=solid]

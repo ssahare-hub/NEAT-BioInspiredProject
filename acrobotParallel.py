@@ -60,7 +60,7 @@ def run():
     hyperparams.mutation_probabilities['bias_set'] = 0.00
     hyperparams.mutation_probabilities['re-enable'] = 0.01
     hyperparams.fitness_offset = 1000
-    hyperparams.max_fitness = 900
+    hyperparams.max_fitness = 868
     hyperparams.max_generations = 200
     hyperparams.survival_percentage = 0.25
 

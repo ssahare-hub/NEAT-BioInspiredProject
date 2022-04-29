@@ -34,7 +34,7 @@ def run():
 
     hyperparams = Hyperparameters()
     hyperparams.default_activation = sigmoid
-    hyperparams.delta_threshold = 3
+    hyperparams.delta_threshold = 2.5
     hyperparams.mutation_probabilities['node'] = 0.2
     hyperparams.mutation_probabilities['connection'] = 0.2
     hyperparams.mutation_probabilities['mutate'] = 0.2
@@ -43,6 +43,7 @@ def run():
     hyperparams.mutation_probabilities['bias_perturb'] = 0.7
     hyperparams.mutation_probabilities['bias_set'] = 0.00
     hyperparams.mutation_probabilities['re-enable'] = 0.01
+    hyperparams.mutation_probabilities['mutate'] = 0.75
     hyperparams.survival_percentage = 0.25
     hyperparams.max_fitness = 950
     hyperparams.max_generations = 100
@@ -98,10 +99,10 @@ def run():
             # so saving genome whenever it beats the last best
             if not os.path.exists('cartpole'):
                 os.makedirs('cartpole')
-            if not os.path.exists('cartpole/models'):
-                os.makedirs('cartpole/models')
+            if not os.path.exists('cartpole/cartpole_models'):
+                os.makedirs('cartpole/cartpole_models')
             if current_best.get_fitness() > neato._global_best.get_fitness():
-                with open(f'cartpole/models/neato_cartpole_gen{current_gen}', 'wb') as f:
+                with open(f'cartpole/cartpole_model/neato_cartpole_gen{current_gen}', 'wb') as f:
                     pickle.dump(current_best, f)
             neato.update_fittest()
         except Exception as e:
@@ -116,17 +117,17 @@ def run():
             plt.plot(neato.get_max_fitness_history(), label='max')
             plt.axhline(y=hyperparams.max_fitness, color='red', linestyle='-', label='desired max fitness')
             plt.legend()
-            plt.savefig(f'cartpole/graphs/progress.png')
+            plt.savefig(f'cartpole/cartpole_graphs/progress.png')
             plt.close()
             plt.figure()
             plt.plot(neato.get_network_history(), label='network size')
             plt.legend()
-            plt.savefig(f'cartpole/graphs/network_progress.png')
+            plt.savefig(f'cartpole/cartpole_graphs/network_progress.png')
             plt.close()
             plt.figure()
             plt.plot(neato.get_population_history(), label='population size')
             plt.legend()
-            plt.savefig(f'cartpole/graphs/population_progress.png')
+            plt.savefig(f'cartpole/cartpole_graphs/population_progress.png')
             plt.close()
         except Exception as e:
             print('progress plots', '='*40)

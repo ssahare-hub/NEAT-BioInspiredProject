@@ -24,7 +24,7 @@ def save_frames_as_gif(frames, path='./', filename='gym_animation.gif'):
 
 def run():
     gen = 35
-    with open('mountain_car_best_individual', 'rb') as f:
+    with open('mountain_car\neato_mountain_car_best_individual', 'rb') as f:
         genome: Genome = pickle.load(f)
 
     print('Loaded genome:')

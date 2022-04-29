@@ -21,7 +21,7 @@ def save_frames_as_gif(frames, path='./', filename='gym_animation.gif'):
     anim.save(path + filename, writer='imagemagick', fps=60)
 
 def run():
-    with open('cartpole/neato_cartpole_best_individual_gen2', 'rb') as f:
+    with open(r'cartpole\neato_cartpole_best_individual', 'rb') as f:
         genome: Genome = pickle.load(f)
 
     print('Loaded genome:')

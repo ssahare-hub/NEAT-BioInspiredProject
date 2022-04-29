@@ -22,7 +22,7 @@ def save_frames_as_gif(frames, path='./', filename='gym_animation.gif'):
 
 EPISODE_DURATION = 200
 def run():
-    with open(r'acrobat\models\neato_acrobat_89_884', 'rb') as f:
+    with open(r'acrobot\neato_acrobot_best_individual', 'rb') as f:
         genome: Genome = pickle.load(f)
 
     print('Loaded genome:')

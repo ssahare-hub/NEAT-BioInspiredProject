@@ -34,7 +34,7 @@ def run():
 
     hyperparams = Hyperparameters()
     hyperparams.default_activation = sigmoid
-    hyperparams.delta_threshold = 3
+    hyperparams.delta_threshold = 2.5
     hyperparams.mutation_probabilities['node'] = 0.2
     hyperparams.mutation_probabilities['connection'] = 0.2
     hyperparams.mutation_probabilities['mutate'] = 0.2

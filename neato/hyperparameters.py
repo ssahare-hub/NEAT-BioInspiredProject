@@ -26,7 +26,7 @@ class Hyperparameters(object):
         self.delta_threshold = 1.5
         self.distance_weights = {
             'disjoint_connections': 1.0,
-            'matching_connections': 1,
+            'matching_connections': 0.75,
             'weight': 1.0,
             'bias': 1.0
         }
